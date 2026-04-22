@@ -41,6 +41,7 @@ The core task delegation pipeline is already working. Only minor polish needed b
 - Database migration (SQLite → PostgreSQL)
 - Notifications
 - Photo attachments
+- Mobile app (native)
 
 ### How Task Delegation Works
 
@@ -49,53 +50,114 @@ The system uses an employee list with responsibilities to match tasks to the rig
 1. **Employee list** defined in `core/org_structure.py` — each person has name, department, title, and responsibilities
 2. **Voice input** → ASR transcribes → text sent to GLM-4-flash
 3. **AI routing** — GLM receives the org structure as context, uses function calling to pick the best assignee based on task content and employee responsibilities
-4. **Fallback** — if AI unavailable, keyword matching against responsibilities (e.g. "设备" → equipment department)
+4. **Fallback** — if AI unavailable, keyword matching against responsibilities (e.g. "equipment" → equipment department)
 5. **Result** — task description + assigned person + department + priority + reason displayed in UI
 
 **To customize for client**: replace the mock data in `core/org_structure.py` with real employee names and responsibilities. No code changes needed, just data.
 
 ---
 
-## Production Timeline: 2-3 Weeks
+## Production Timeline
 
-Build a reliable, deployable system. CRM integration added as a separate phase after core delegation is solid.
+### Mobile App: Browser vs. Native
 
-### Week 1: Hardening + Deploy / 第1周：加固 + 部署
+| | Browser (Current) | React Native App |
+|--|-------------------|------------------|
+| Access | Open URL in phone browser | Install from App Store / Google Play |
+| Voice recording | Web MediaRecorder API | Native microphone access |
+| Push notifications | No | Yes (Firebase / APNs) |
+| Offline support | Limited | Full (local queue + sync) |
+| Development time | Already done | +1-2 weeks |
+| App Store review | Not needed | 3-7 days review time |
+| **Recommendation** | Start here for PoC and early production | Add later when confirmed needed |
 
-| Task | Time |
-|------|------|
-| Replace hardcoded org data with SQLite tables + simple seed | 1 day |
-| Long-form audio: robust chunked upload with retry/resume | 1 day |
-| Audio format compatibility (WAV, MP3, M4A, WebM) | 1 day |
-| Error handling: graceful degradation, clear error messages in Chinese | 1 day |
-| Cloud server setup + nginx reverse proxy + deploy | 1 day |
-
-### Week 2: Task Lifecycle + Notifications / 第2周：任务生命周期 + 通知
-
-| Task | Time |
-|------|------|
-| Task lifecycle: pending → assigned → in_progress → completed → archived | 1 day |
-| User authentication (login, sessions) | 1 day |
-| Task assignment notifications (email or push) | 1 day |
-| Task dashboard: filters, status tracking | 1 day |
-| Transcript review/approval UI (for long-form) | 1 day |
-
-### Week 3 (if needed): CRM Integration + Polish / 第3周（如需）：CRM 集成 + 打磨
+**Mobile deployment timeline:**
 
 | Task | Time |
 |------|------|
-| Migrate SQLite → PostgreSQL | 1 day |
-| CRM integration or lightweight CRM build | 2-3 days |
-| Photo attachment support | 1 day |
+| React Native project setup + voice recording module | 2-3 days |
+| API integration (connect to existing backend) | 1-2 days |
+| Offline queue (record without network, sync later) | 1-2 days |
+| Push notification setup (Firebase for Android, APNs for iOS) | 1 day |
+| Testing on real devices (Android + iOS) | 1-2 days |
+| App Store / Google Play submission and review | 3-7 days (waiting) |
+| **Total** | **+1-2 weeks active dev + 1 week review** |
 
-### Production Deliverables
+### Deployment: Cloud Server vs. On-Premise
 
-- Deployed on cloud server
-- Voice task delegation → AI routing → task saved and tracked
-- User login and task ownership
-- Task lifecycle with notifications
-- Long-form transcription with real-time progress
-- CRM integration (or built-in lightweight CRM)
+| | Cloud Server | Company Intranet |
+|--|-------------|-----------------|
+| Setup time | 1 day | 3-5 days |
+| External access (4G/5G) | Built-in | Requires VPN or reverse proxy |
+| SSL/HTTPS | Free (Let's Encrypt) | Self-signed cert or internal CA |
+| Firewall config | Minimal | Coordinate with IT department |
+| Database | Managed PostgreSQL available | Install and maintain ourselves |
+| Maintenance | Cloud provider handles hardware | Client's IT handles hardware |
+| Cost | ~100-200 CNY/month | No monthly cost (existing hardware) |
+| Data sovereignty | Data leaves company network | Data stays on-site |
+
+**Cloud server deployment: 1 day**
+
+| Task | Time |
+|------|------|
+| Provision server (Alibaba Cloud / Tencent Cloud) | 1h |
+| Install Python, PostgreSQL, nginx | 1-2h |
+| Deploy backend code, configure systemd service | 1h |
+| HTTPS setup (Let's Encrypt) | 30min |
+| DNS configuration | 30min |
+| Smoke test + verify from mobile | 1h |
+
+**On-premise deployment: 3-5 days**
+
+| Task | Time |
+|------|------|
+| Coordinate with client IT (server access, OS, network) | 1 day |
+| Install Python, PostgreSQL, nginx on internal server | 1 day |
+| Firewall / port configuration for mobile access | 1 day |
+| VPN or reverse proxy setup (for 4G/5G access from field) | 1-2 days |
+| Internal SSL cert or self-signed | 1h |
+| Smoke test from inside and outside network | 1h |
+
+### Full Production Timeline (by Scenario)
+
+**Scenario A: Cloud Server + Browser Access**
+
+| Phase | Time | Tasks |
+|-------|------|-------|
+| Week 1 | 5 days | Backend hardening, error handling, audio format compatibility |
+| Week 2 | 5 days | Task lifecycle, auth, notifications, task dashboard |
+| Week 3 | 3-5 days | Cloud deploy, PostgreSQL migration, testing |
+| Week 4 (optional) | 5 days | CRM integration, photo attachments |
+| **Total** | **3-4 weeks** | |
+
+**Scenario B: Cloud Server + React Native App**
+
+| Phase | Time | Tasks |
+|-------|------|-------|
+| Weeks 1-3 | Same as Scenario A | Backend + deploy |
+| Week 4 | 5 days | React Native app development |
+| Week 5 | 5 days | Offline queue, push notifications, device testing |
+| Week 6 | 3-7 days | App Store / Google Play review (waiting) |
+| **Total** | **4-5 weeks + review** | |
+
+**Scenario C: On-Premise + Browser Access**
+
+| Phase | Time | Tasks |
+|-------|------|-------|
+| Weeks 1-2 | Same as Scenario A | Backend development |
+| Week 3 | 3-5 days | On-premise deployment + IT coordination |
+| Week 4 (optional) | 5 days | CRM integration, photo attachments |
+| **Total** | **3-4 weeks** | (but may slip if IT coordination slow) |
+
+**Scenario D: On-Premise + React Native App**
+
+| Phase | Time | Tasks |
+|-------|------|-------|
+| Weeks 1-2 | Same as Scenario A | Backend development |
+| Week 3 | 3-5 days | On-premise deployment |
+| Week 4-5 | 10 days | React Native app + offline + push |
+| Week 6 | 3-7 days | App Store review |
+| **Total** | **5-6 weeks + review** | |
 
 ---
 
@@ -103,8 +165,13 @@ Build a reliable, deployable system. CRM integration added as a separate phase a
 
 | Phase | Time | What You Get |
 |-------|------|-------------|
-| **PoC** | Done + 2-4h polish | Voice → route → result, working demo |
-| **Production** | 2-3 weeks | Deployed system, auth, notifications, CRM |
+| **PoC** | Done + 2-4h polish | Voice → route → result, working demo (browser) |
+| **Production A** (cloud + browser) | 3-4 weeks | Deployed cloud system, auth, notifications |
+| **Production B** (cloud + app) | 4-5 weeks + review | Same as A + native mobile app |
+| **Production C** (on-premise + browser) | 3-4 weeks | Deployed on internal server |
+| **Production D** (on-premise + app) | 5-6 weeks + review | Same as C + native mobile app |
+
+**Recommendation**: Start with Scenario A (cloud + browser) for fastest time-to-value. Add native app later if needed.
 
 ---
 
@@ -153,6 +220,7 @@ Build a reliable, deployable system. CRM integration added as a separate phase a
 - 数据库迁移（SQLite → PostgreSQL）
 - 通知推送
 - 照片附件
+- 原生移动 App
 
 ### 任务委派逻辑
 
@@ -168,46 +236,107 @@ Build a reliable, deployable system. CRM integration added as a separate phase a
 
 ---
 
-## 生产版时间：2-3 周
+## 生产版时间
 
-搭建可靠、可部署的系统。CRM 集成作为核心委派功能稳定后的独立阶段。
+### 移动端：浏览器 vs 原生 App
 
-### 第1周：加固 + 部署
+| | 浏览器访问（当前方案） | React Native 原生 App |
+|--|---------------------|----------------------|
+| 访问方式 | 手机浏览器打开网址 | 安装 App（App Store / Google Play） |
+| 语音录制 | Web MediaRecorder API | 原生麦克风接口 |
+| 推送通知 | 不支持 | 支持（Firebase / APNs） |
+| 离线使用 | 有限 | 完整支持（本地排队 + 同步） |
+| 开发时间 | 已完成 | +1-2 周 |
+| 应用商店审核 | 不需要 | 3-7 天审核周期 |
+| **建议** | PoC 和初期生产版用这个 | 确认需求后再加 |
 
-| 任务 | 时间 |
-|------|------|
-| 将硬编码组织数据替换为 SQLite 表 + 简单初始化 | 1 天 |
-| 长篇音频：分块上传 + 断点续传 + 重试 | 1 天 |
-| 音频格式兼容（WAV、MP3、M4A、WebM） | 1 天 |
-| 错误处理：优雅降级、中文错误提示 | 1 天 |
-| 云服务器搭建 + nginx 反向代理 + 部署 | 1 天 |
-
-### 第2周：任务生命周期 + 通知
-
-| 任务 | 时间 |
-|------|------|
-| 任务生命周期：pending → assigned → in_progress → completed → archived | 1 天 |
-| 用户认证（登录、会话） | 1 天 |
-| 任务分配通知（邮件或推送） | 1 天 |
-| 任务看板：筛选、状态追踪 | 1 天 |
-| 转录审核/确认界面（长篇转录） | 1 天 |
-
-### 第3周（如需）：CRM 集成 + 打磨
+**移动端部署时间：**
 
 | 任务 | 时间 |
 |------|------|
-| SQLite 迁移至 PostgreSQL | 1 天 |
-| CRM 集成或搭建轻量级 CRM | 2-3 天 |
-| 照片附件支持 | 1 天 |
+| React Native 项目搭建 + 语音录制模块 | 2-3 天 |
+| API 对接（连接现有后端） | 1-2 天 |
+| 离线队列（无网络时录音，恢复后同步） | 1-2 天 |
+| 推送通知（Android 用 Firebase，iOS 用 APNs） | 1 天 |
+| 真机测试（Android + iOS） | 1-2 天 |
+| App Store / Google Play 提交审核 | 3-7 天（等待） |
+| **合计** | **+1-2 周开发 + 1 周审核** |
 
-### 生产版交付物
+### 部署：云服务器 vs 公司内网
 
-- 部署在云服务器上
-- 语音任务委派 → AI 路由 → 任务保存并追踪
-- 用户登录和任务归属
-- 完整任务生命周期 + 通知
-- 长篇转录 + 实时进度
-- CRM 集成（或自建轻量 CRM）
+| | 云服务器 | 公司内网 |
+|--|---------|---------|
+| 搭建时间 | 1 天 | 3-5 天 |
+| 外网访问（4G/5G） | 天然支持 | 需要 VPN 或反向代理 |
+| SSL/HTTPS | 免费（Let's Encrypt） | 自签名证书或内部 CA |
+| 防火墙配置 | 基本不需要 | 需与 IT 部门协调 |
+| 数据库 | 云托管 PostgreSQL 可用 | 自己安装维护 |
+| 运维 | 云服务商处理硬件 | 客户 IT 处理硬件 |
+| 费用 | 约 100-200 元/月 | 无月费（用现有硬件） |
+| 数据安全 | 数据离开公司网络 | 数据留在公司内部 |
+
+**云服务器部署：1 天**
+
+| 任务 | 时间 |
+|------|------|
+| 购买服务器（阿里云/腾讯云） | 1h |
+| 安装 Python、PostgreSQL、nginx | 1-2h |
+| 部署后端代码，配置 systemd 服务 | 1h |
+| HTTPS 配置（Let's Encrypt） | 30min |
+| DNS 域名配置 | 30min |
+| 冒烟测试 + 手机访问验证 | 1h |
+
+**公司内网部署：3-5 天**
+
+| 任务 | 时间 |
+|------|------|
+| 与客户 IT 协调（服务器访问、操作系统、网络） | 1 天 |
+| 内网服务器安装 Python、PostgreSQL、nginx | 1 天 |
+| 防火墙/端口配置（让手机能访问） | 1 天 |
+| VPN 或反向代理搭建（让外场 4G/5G 能访问） | 1-2 天 |
+| 内部 SSL 证书或自签名 | 1h |
+| 内网 + 外网冒烟测试 | 1h |
+
+### 完整生产版时间（按场景）
+
+**场景 A：云服务器 + 浏览器访问**
+
+| 阶段 | 时间 | 任务 |
+|------|------|------|
+| 第1周 | 5 天 | 后端加固、错误处理、音频格式兼容 |
+| 第2周 | 5 天 | 任务生命周期、认证、通知、任务看板 |
+| 第3周 | 3-5 天 | 云部署、PostgreSQL 迁移、测试 |
+| 第4周（可选） | 5 天 | CRM 集成、照片附件 |
+| **合计** | **3-4 周** | |
+
+**场景 B：云服务器 + React Native App**
+
+| 阶段 | 时间 | 任务 |
+|------|------|------|
+| 第1-3周 | 同场景 A | 后端 + 部署 |
+| 第4周 | 5 天 | React Native App 开发 |
+| 第5周 | 5 天 | 离线队列、推送通知、真机测试 |
+| 第6周 | 3-7 天 | App Store / Google Play 审核（等待） |
+| **合计** | **4-5 周 + 审核** | |
+
+**场景 C：公司内网 + 浏览器访问**
+
+| 阶段 | 时间 | 任务 |
+|------|------|------|
+| 第1-2周 | 同场景 A | 后端开发 |
+| 第3周 | 3-5 天 | 内网部署 + IT 协调 |
+| 第4周（可选） | 5 天 | CRM 集成、照片附件 |
+| **合计** | **3-4 周** | （但 IT 协调慢的话可能延期） |
+
+**场景 D：公司内网 + React Native App**
+
+| 阶段 | 时间 | 任务 |
+|------|------|------|
+| 第1-2周 | 同场景 A | 后端开发 |
+| 第3周 | 3-5 天 | 内网部署 |
+| 第4-5周 | 10 天 | React Native App + 离线 + 推送 |
+| 第6周 | 3-7 天 | App Store 审核 |
+| **合计** | **5-6 周 + 审核** | |
 
 ---
 
@@ -215,5 +344,10 @@ Build a reliable, deployable system. CRM integration added as a separate phase a
 
 | 阶段 | 时间 | 交付内容 |
 |------|------|---------|
-| **PoC** | 已完成 + 2-4h 打磨 | 语音 → 路由 → 结果，可运行演示 |
-| **生产版** | 2-3 周 | 部署上线的系统，认证、通知、CRM |
+| **PoC** | 已完成 + 2-4h 打磨 | 语音 → 路由 → 结果，可运行演示（浏览器） |
+| **生产版 A**（云 + 浏览器） | 3-4 周 | 云端部署，认证、通知 |
+| **生产版 B**（云 + App） | 4-5 周 + 审核 | 同 A + 原生移动 App |
+| **生产版 C**（内网 + 浏览器） | 3-4 周 | 内网服务器部署 |
+| **生产版 D**（内网 + App） | 5-6 周 + 审核 | 同 C + 原生移动 App |
+
+**建议**：先用场景 A（云服务器 + 浏览器）最快上线出价值，后续根据需要加原生 App。
