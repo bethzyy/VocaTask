@@ -1,6 +1,7 @@
 # VocaTask — Client Confirmation Questions
 
 > Information needed to estimate timelines for PoC and production versions.
+> All time estimates below are based on AI-assisted development (Claude Code), not manual development.
 
 ---
 
@@ -10,9 +11,9 @@ We need to understand whether a CRM system currently exists at all. This is the 
 
 | CRM Status | What We Build | Estimated Extra Time |
 |------------|--------------|---------------------|
-| CRM exists with API | Integration layer only | 1-2 weeks |
-| CRM exists but no API | Direct DB connection or workaround | 3-5 weeks |
-| No CRM at all | Full task management system from scratch | +4-6 weeks |
+| CRM exists with API | Integration layer only | 2-3 days |
+| CRM exists but no API | Direct DB connection or workaround | 1-2 weeks |
+| No CRM at all | Full task management system from scratch | +2-3 weeks |
 
 **Please confirm first: Does the organization currently have a CRM or task management system in use?**
 
@@ -30,7 +31,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - What does "write results back to CRM" mean? Create task / send notification / update ticket?
 - Where is the CRM deployed? (Cloud / on-premise) Can our backend access it?
 
-**Impact on timeline:** With API docs: 1-2 weeks integration. Reverse engineering: 3-5 weeks. No CRM: +4-6 weeks to build.
+**Impact on timeline:** With API docs: 2-3 days integration. Reverse engineering: 1-2 weeks. No CRM: +2-3 weeks to build.
 
 ## 2. Usage Scenario
 
@@ -39,7 +40,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - Long-form transcription (90 min) scenario: meetings / site inspections / training recordings?
 - Are photo attachments required or optional?
 
-**Impact on timeline:** Noisy environments need noise reduction (+1-2 weeks). High concurrency affects architecture (+1 week). Photos feature (+1 week).
+**Impact on timeline:** Noisy environments need noise reduction (+2-4 days). High concurrency affects architecture (+2-3 days). Photos feature (+2-3 days).
 
 ## 3. AI Models
 
@@ -47,7 +48,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - Gemma 4 E2B local inference — do you have a GPU server?
 - Is speaker diarization (identifying who is speaking) a hard requirement?
 
-**Impact on timeline:** Claude API works out of the box. Other models need adaptation (+1 week). Speaker diarization without GPU needs alternative solution (+2-3 weeks).
+**Impact on timeline:** Claude API works out of the box. Other models need adaptation (+2-3 days). Speaker diarization without GPU needs alternative solution (+1-2 weeks).
 
 ## 4. Infrastructure
 
@@ -56,7 +57,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - Deployment target: cloud server / company intranet / self-hosted?
 - Do you have operations/maintenance staff?
 
-**Impact on timeline:** Existing servers + DB: deploy in 1-2 days. Build from scratch: +1 week. On-premise security config: +1 week.
+**Impact on timeline:** Existing servers + DB: deploy in 1 day. Build from scratch: +3-4 days. On-premise security config: +3-4 days.
 
 ## 5. Budget
 
@@ -73,6 +74,7 @@ Please provide CRM API documentation or database schema, and system access addre
 # VocaTask — 客户确认问题清单
 
 > 以下信息用于估算原型（PoC）和生产级产品的开发时间。
+> 所有时间估算均基于 AI 辅助开发（Claude Code），非人工开发。
 
 ---
 
@@ -82,9 +84,9 @@ Please provide CRM API documentation or database schema, and system access addre
 
 | CRM 现状 | 我们要做什么 | 额外时间 |
 |----------|------------|---------|
-| 有 CRM，且有 API | 只做集成层 | 1-2 周 |
-| 有 CRM，但没有 API | 直连数据库或找其他方案 | 3-5 周 |
-| 完全没有 CRM | 从零搭建整个任务管理系统 | +4-6 周 |
+| 有 CRM，且有 API | 只做集成层 | 2-3 天 |
+| 有 CRM，但没有 API | 直连数据库或找其他方案 | 1-2 周 |
+| 完全没有 CRM | 从零搭建整个任务管理系统 | +2-3 周 |
 
 **请先确认：公司目前有没有在用 CRM 或任务管理系统？**
 
@@ -102,7 +104,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - "结果回写 CRM" 是建任务、发通知、还是更新工单？
 - CRM 部署在哪里？（云上/内网）我们的后端能否访问到？
 
-**对时间估算的影响：** 有现成 API 文档则 1-2 周；逆向分析或直连数据库则 3-5 周；没有 CRM 则额外 4-6 周。
+**对时间估算的影响：** 有现成 API 文档则 2-3 天；逆向分析或直连数据库则 1-2 周；没有 CRM 则额外 2-3 周。
 
 ## 2. 使用场景
 
@@ -111,7 +113,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - 长篇转录（90分钟）场景：会议录音 / 巡检记录 / 培训记录？
 - 照片附件是必须的还是可选的？
 
-**对时间估算的影响：** 嘈杂环境需降噪处理（+1-2 周）；多人并发影响架构设计（+1 周）；照片附件（+1 周）。
+**对时间估算的影响：** 嘈杂环境需降噪处理（+2-4 天）；多人并发影响架构设计（+2-3 天）；照片附件（+2-3 天）。
 
 ## 3. AI 模型
 
@@ -119,7 +121,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - Gemma 4 E2B 本地推理 — 有 GPU 服务器吗？
 - 说话人分离（区分谁在说话）是硬性需求吗？
 
-**对时间估算的影响：** Claude API 直接可用；其他模型需适配（+1 周）。说话人分离无 GPU 需另找方案（+2-3 周）。
+**对时间估算的影响：** Claude API 直接可用；其他模型需适配（+2-3 天）。说话人分离无 GPU 需另找方案（+1-2 周）。
 
 ## 4. 基础设施
 
@@ -128,7 +130,7 @@ Please provide CRM API documentation or database schema, and system access addre
 - 部署在哪里？云服务器 / 公司内网 / 客户自己搭？
 - 有运维人员吗？
 
-**对时间估算的影响：** 有现成服务器和数据库 1-2 天部署；从零搭建（+1 周）；内网安全配置（+1 周）。
+**对时间估算的影响：** 有现成服务器和数据库 1 天部署；从零搭建（+3-4 天）；内网安全配置（+3-4 天）。
 
 ## 5. 预算
 
