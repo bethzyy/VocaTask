@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocaTask — 语音任务路由</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1>VocaTask</h1>
+    <p class="subtitle">语音任务路由与转录系统</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="quick">快速任务</button>
+    <button class="tab" data-tab="long">长篇转录</button>
+  </nav>
+
+  <!-- Quick Task Panel -->
+  <section id="panel-quick" class="panel active">
+    <div class="recorder-area">
+      <div class="timer" id="quick-timer">00:00</div>
+      <button class="btn-record" id="quick-record-btn">
+        <span class="icon">&#9679;</span> 按住说话
+      </button>
+      <p class="hint" id="quick-hint">点击按钮开始录音</p>
+    </div>
+    <div class="result-area" id="quick-result" style="display:none"></div>
+  </section>
+
+  <!-- Long Transcription Panel -->
+  <section id="panel-long" class="panel">
+    <div class="recorder-area">
+      <div class="timer" id="long-timer">00:00</div>
+      <button class="btn-record btn-long" id="long-record-btn">
+        <span class="icon">&#9679;</span> 开始长录音
+      </button>
+      <button class="btn-stop" id="long-stop-btn" style="display:none">
+        &#9632; 停止录音
+      </button>
+      <p class="hint" id="long-hint">适用于会议、巡检等长时录音</p>
+    </div>
+    <div class="status-area" id="long-status" style="display:none"></div>
+    <div class="result-area" id="long-result" style="display:none"></div>
+  </section>
+
+  <!-- History -->
+  <section class="history" id="history-section">
+    <h3>历史记录</h3>
+    <div id="history-list" class="history-list">
+      <p class="empty-hint">暂无记录</p>
+    </div>
+  </section>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
