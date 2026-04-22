@@ -6,13 +6,12 @@
 
 ## PoC Screenshots
 
-**Quick Task Delegation / 快速任务委派**
-
-![Quick Task](screenshots/quick_task.png)
-
-**Long-Form Transcription / 长篇转录**
-
-![Long Transcription](screenshots/long_transcription.png)
+<table>
+<tr>
+<td><img src="screenshots/quick_task.png" width="300"/><br/><b>Quick Task / 快速任务</b></td>
+<td><img src="screenshots/long_transcription.png" width="300"/><br/><b>Long Transcription / 长篇转录</b></td>
+</tr>
+</table>
 
 ---
 
