@@ -4,6 +4,18 @@
 
 ---
 
+## PoC Screenshots
+
+**Quick Task Delegation / 快速任务委派**
+
+![Quick Task](screenshots/quick_task.png)
+
+**Long-Form Transcription / 长篇转录**
+
+![Long Transcription](screenshots/long_transcription.png)
+
+---
+
 ## Current Status
 
 | Module | Status |
