@@ -17,7 +17,9 @@
 
 ---
 
-## PoC Timeline: Already Functional / Minor Polish: 2-4 Hours
+## PoC Timeline
+
+### Option 1: Browser Only — Already Functional + 2-4 Hours Polish
 
 The core task delegation pipeline is already working. Only minor polish needed before demo.
 
@@ -27,12 +29,44 @@ The core task delegation pipeline is already working. Only minor polish needed b
 | Add task history view in UI (list of past routed tasks) | 1h |
 | Test with real voice input in browser, fix any issues | 1-2h |
 
+Test on real phone: open `http://<server-ip>:8010` in phone browser, use microphone — works immediately, no installation needed.
+
+### Option 2: Deploy to Cloud + Real Device Testing — 2-3 Days
+
+Take the working prototype, deploy to a cloud server, and test on real phones over 4G/5G.
+
+| Task | Time |
+|------|------|
+| Polish tasks (same as Option 1) | 2-4h |
+| Provision cloud server (Alibaba Cloud / Tencent Cloud) | 1h |
+| Deploy backend to cloud + configure nginx | 2h |
+| HTTPS setup (Let's Encrypt) | 30min |
+| Replace mock org data with real employee list | 1h |
+| Test on real Android phone over 4G/5G | 1h |
+| Test on real iPhone over 4G/5G | 1h |
+| Fix mobile-specific issues (mic permission, browser compat, audio format) | 2-4h |
+| Bug fixes and stability testing | 2-3h |
+
+### Option 3: React Native App on Real Device — 4-6 Days
+
+Wrap the prototype in a native mobile app and install on a real phone.
+
+| Task | Time |
+|------|------|
+| All tasks from Option 2 (deploy backend) | 1 day |
+| React Native project setup + voice recording module | 1-2 days |
+| API integration (connect app to deployed backend) | 1 day |
+| Test on real Android device (USB debug) | 2-3h |
+| Test on real iPhone (TestFlight) | 2-3h |
+| Fix device-specific issues (permissions, audio codecs, background recording) | 1-2 days |
+
 ### PoC Deliverables
 
-- Working web app: record voice → AI transcribes → routes to person/department → shows result
+- Working app: record voice → AI transcribes → routes to person/department → shows result
 - Long-form recording → queued → transcribed → stored
-- Task history: list of all routed tasks from this session
-- Mock org data sufficient for demo purposes
+- Task history: list of all routed tasks
+- Employee list with responsibilities driving AI routing
+- Tested on real mobile device
 
 ### What's NOT in PoC (deferred to later)
 
@@ -41,7 +75,8 @@ The core task delegation pipeline is already working. Only minor polish needed b
 - Database migration (SQLite → PostgreSQL)
 - Notifications
 - Photo attachments
-- Mobile app (native)
+- Offline mode
+- Push notifications
 
 ### How Task Delegation Works
 
@@ -165,13 +200,15 @@ The system uses an employee list with responsibilities to match tasks to the rig
 
 | Phase | Time | What You Get |
 |-------|------|-------------|
-| **PoC** | Done + 2-4h polish | Voice → route → result, working demo (browser) |
+| **PoC 1** (browser only) | Done + 2-4h polish | Working demo in browser |
+| **PoC 2** (cloud + real device) | 2-3 days | Deployed, tested on real phone via browser |
+| **PoC 3** (native app on device) | 4-6 days | Native app installed on real phone |
 | **Production A** (cloud + browser) | 3-4 weeks | Deployed cloud system, auth, notifications |
 | **Production B** (cloud + app) | 4-5 weeks + review | Same as A + native mobile app |
 | **Production C** (on-premise + browser) | 3-4 weeks | Deployed on internal server |
 | **Production D** (on-premise + app) | 5-6 weeks + review | Same as C + native mobile app |
 
-**Recommendation**: Start with Scenario A (cloud + browser) for fastest time-to-value. Add native app later if needed.
+**Recommendation**: PoC 2 for fastest real-device validation. Production A for fastest go-live.
 
 ---
 
@@ -196,7 +233,9 @@ The system uses an employee list with responsibilities to match tasks to the rig
 
 ---
 
-## PoC 时间：功能已完成 / 微调打磨：2-4 小时
+## PoC 时间
+
+### 方案一：仅浏览器 — 已完成 + 2-4 小时打磨
 
 任务委派核心流程已经跑通，只需微调即可用于演示。
 
@@ -206,12 +245,44 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | 添加任务历史记录界面（展示过去路由过的任务） | 1h |
 | 用真实语音输入测试，修复问题 | 1-2h |
 
+手机测试：手机浏览器打开 `http://<服务器IP>:8010`，使用麦克风 — 无需安装，立即可用。
+
+### 方案二：部署到云端 + 真机测试 — 2-3 天
+
+把跑通的原型部署到云服务器，用真手机在 4G/5G 下测试。
+
+| 任务 | 时间 |
+|------|------|
+| 打磨任务（同方案一） | 2-4h |
+| 购买云服务器（阿里云/腾讯云） | 1h |
+| 部署后端到云 + 配置 nginx | 2h |
+| HTTPS 配置（Let's Encrypt） | 30min |
+| 将模拟数据替换为真实员工列表 | 1h |
+| Android 真机 4G/5G 测试 | 1h |
+| iPhone 真机 4G/5G 测试 | 1h |
+| 修复移动端问题（麦克风权限、浏览器兼容、音频格式） | 2-4h |
+| Bug 修复 + 稳定性测试 | 2-3h |
+
+### 方案三：React Native App 真机安装 — 4-6 天
+
+把原型包装成原生 App，安装到真机上。
+
+| 任务 | 时间 |
+|------|------|
+| 方案二全部任务（部署后端） | 1 天 |
+| React Native 项目搭建 + 语音录制模块 | 1-2 天 |
+| API 对接（App 连接已部署的后端） | 1 天 |
+| Android 真机测试（USB 调试） | 2-3h |
+| iPhone 真机测试（TestFlight） | 2-3h |
+| 修复设备问题（权限、音频编解码、后台录音） | 1-2 天 |
+
 ### PoC 交付物
 
-- 可运行的 Web 应用：录音 → AI 转录 → 路由到人员/部门 → 展示结果
+- 可运行应用：录音 → AI 转录 → 路由到人员/部门 → 展示结果
 - 长篇录音 → 排队 → 转录 → 存储
-- 任务历史：当前会话所有路由任务的列表
-- 模拟组织数据足够演示使用
+- 任务历史记录列表
+- 员工职责列表驱动 AI 路由
+- 真机上测试通过
 
 ### PoC 不包含（后续再做）
 
@@ -220,7 +291,8 @@ The system uses an employee list with responsibilities to match tasks to the rig
 - 数据库迁移（SQLite → PostgreSQL）
 - 通知推送
 - 照片附件
-- 原生移动 App
+- 离线模式
+- 推送通知
 
 ### 任务委派逻辑
 
@@ -344,10 +416,12 @@ The system uses an employee list with responsibilities to match tasks to the rig
 
 | 阶段 | 时间 | 交付内容 |
 |------|------|---------|
-| **PoC** | 已完成 + 2-4h 打磨 | 语音 → 路由 → 结果，可运行演示（浏览器） |
+| **PoC 1**（仅浏览器） | 已完成 + 2-4h 打磨 | 浏览器中可运行演示 |
+| **PoC 2**（云端 + 真机） | 2-3 天 | 部署到云端，真机浏览器测试通过 |
+| **PoC 3**（原生 App 真机） | 4-6 天 | 原生 App 安装到真机测试 |
 | **生产版 A**（云 + 浏览器） | 3-4 周 | 云端部署，认证、通知 |
 | **生产版 B**（云 + App） | 4-5 周 + 审核 | 同 A + 原生移动 App |
 | **生产版 C**（内网 + 浏览器） | 3-4 周 | 内网服务器部署 |
 | **生产版 D**（内网 + App） | 5-6 周 + 审核 | 同 C + 原生移动 App |
 
-**建议**：先用场景 A（云服务器 + 浏览器）最快上线出价值，后续根据需要加原生 App。
+**建议**：PoC 用方案2最快在真机上验证。生产版用场景A最快上线。
