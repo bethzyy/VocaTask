@@ -5,35 +5,20 @@
 
 ---
 
-## Prerequisite: Clarify the CRM Situation
+## CRM Decision: CONFIRMED — Build Our Own
 
-We need to understand whether a CRM system currently exists at all. This is the single most important question, because the entire backend architecture depends on it:
+Client confirmed: They currently use **Zoho CRM** but plan to discontinue it. We will build a lightweight CRM from scratch.
 
-| CRM Status | What We Build | Estimated Extra Time |
-|------------|--------------|---------------------|
-| CRM exists with API | Integration layer only | 2-3 days |
-| CRM exists but no API | Direct DB connection or workaround | 1-2 weeks |
-| No CRM at all | Full task management system from scratch | +2-3 weeks |
+- **PoC**: Rudimentary CRM with SQLite (basic people/departments/tasks CRUD)
+- **Production**: Migrate to PostgreSQL with full task lifecycle management (replacing Zoho)
 
-**Please confirm first: Does the organization currently have a CRM or task management system in use?**
-
-If yes → please provide API documentation, database schema, or any technical documentation.
-If no → we will plan to build the data management layer ourselves.
+This eliminates the need for any external CRM integration. All data stays in our own system.
 
 ---
 
-## 1. CRM System
+## Remaining Questions
 
-Please provide CRM API documentation or database schema, and system access address.
-
-- What is the CRM system? (Custom / DingTalk / Feishu / WeCom / Other)
-- Does the CRM have an API for reading and writing data?
-- What does "write results back to CRM" mean? Create task / send notification / update ticket?
-- Where is the CRM deployed? (Cloud / on-premise) Can our backend access it?
-
-**Impact on timeline:** With API docs: 2-3 days integration. Reverse engineering: 1-2 weeks. No CRM: +2-3 weeks to build.
-
-## 2. Usage Scenario
+### 1. Usage Scenario
 
 - Usage environment: office / factory floor / outdoor construction site?
 - How many users? Peak concurrent users?
@@ -42,7 +27,7 @@ Please provide CRM API documentation or database schema, and system access addre
 
 **Impact on timeline:** Noisy environments need noise reduction (+2-4 days). High concurrency affects architecture (+2-3 days). Photos feature (+2-3 days).
 
-## 3. AI Models
+### 2. AI Models
 
 - Do you have an Anthropic API account (Claude)? Or other AI services?
 - Gemma 4 E2B local inference — do you have a GPU server?
@@ -50,16 +35,15 @@ Please provide CRM API documentation or database schema, and system access addre
 
 **Impact on timeline:** Claude API works out of the box. Other models need adaptation (+2-3 days). Speaker diarization without GPU needs alternative solution (+1-2 weeks).
 
-## 4. Infrastructure
+### 3. Infrastructure
 
 - Do you have existing servers? What are the specs?
-- The spec mentions PostgreSQL — existing instance or need to set up?
 - Deployment target: cloud server / company intranet / self-hosted?
 - Do you have operations/maintenance staff?
 
-**Impact on timeline:** Existing servers + DB: deploy in 1 day. Build from scratch: +3-4 days. On-premise security config: +3-4 days.
+**Impact on timeline:** Existing servers: deploy in 1 day. Build from scratch: +3-4 days. On-premise security config: +3-4 days.
 
-## 5. Budget
+### 4. Budget
 
 - AI API monthly budget
 - Server hosting budget
@@ -78,35 +62,20 @@ Please provide CRM API documentation or database schema, and system access addre
 
 ---
 
-## 前置确认：CRM 现状
+## CRM 决策：已确认 — 自建 CRM
 
-首先需要搞清楚客户当前到底有没有 CRM 系统。这是最关键的问题，整个后端架构取决于此：
+客户确认：目前使用 **Zoho CRM** 但计划停用。我们将从零搭建轻量级 CRM。
 
-| CRM 现状 | 我们要做什么 | 额外时间 |
-|----------|------------|---------|
-| 有 CRM，且有 API | 只做集成层 | 2-3 天 |
-| 有 CRM，但没有 API | 直连数据库或找其他方案 | 1-2 周 |
-| 完全没有 CRM | 从零搭建整个任务管理系统 | +2-3 周 |
+- **PoC 阶段**：用 SQLite 做最基础的 CRM（人员/部门/任务的增删改查）
+- **生产版**：迁移到 PostgreSQL，完整的任务生命周期管理（替代 Zoho）
 
-**请先确认：公司目前有没有在用 CRM 或任务管理系统？**
-
-如果有 → 请提供 API 文档、数据库表结构、或任何技术文档。
-如果没有 → 我们将自行规划数据管理层。
+无需对接任何外部 CRM 系统，所有数据都在自有系统内。
 
 ---
 
-## 1. CRM 系统
+## 待确认问题
 
-请提供 CRM 的 API 文档或数据库表结构，以及系统访问地址。
-
-- CRM 是什么系统？（自建/钉钉/飞书/企业微信/其他）
-- 有没有 API 接口可以读写数据？
-- "结果回写 CRM" 是建任务、发通知、还是更新工单？
-- CRM 部署在哪里？（云上/内网）我们的后端能否访问到？
-
-**对时间估算的影响：** 有现成 API 文档则 2-3 天；逆向分析或直连数据库则 1-2 周；没有 CRM 则额外 2-3 周。
-
-## 2. 使用场景
+### 1. 使用场景
 
 - 使用环境：办公室 / 工厂车间 / 户外工地？
 - 大概多少人用？同时在线高峰多少人？
@@ -115,7 +84,7 @@ Please provide CRM API documentation or database schema, and system access addre
 
 **对时间估算的影响：** 嘈杂环境需降噪处理（+2-4 天）；多人并发影响架构设计（+2-3 天）；照片附件（+2-3 天）。
 
-## 3. AI 模型
+### 2. AI 模型
 
 - 有没有 Anthropic API 账号（Claude）？还是用其他 AI 服务？
 - Gemma 4 E2B 本地推理 — 有 GPU 服务器吗？
@@ -123,16 +92,15 @@ Please provide CRM API documentation or database schema, and system access addre
 
 **对时间估算的影响：** Claude API 直接可用；其他模型需适配（+2-3 天）。说话人分离无 GPU 需另找方案（+1-2 周）。
 
-## 4. 基础设施
+### 3. 基础设施
 
 - 有没有现成的服务器？配置如何？
-- 需求中提到 PostgreSQL，有现成的还是要搭建？
 - 部署在哪里？云服务器 / 公司内网 / 客户自己搭？
 - 有运维人员吗？
 
-**对时间估算的影响：** 有现成服务器和数据库 1 天部署；从零搭建（+3-4 天）；内网安全配置（+3-4 天）。
+**对时间估算的影响：** 有现成服务器 1 天部署；从零搭建（+3-4 天）；内网安全配置（+3-4 天）。
 
-## 5. 预算
+### 4. 预算
 
 - AI API 费用预算（按月）
 - 服务器费用预算
