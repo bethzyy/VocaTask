@@ -17,95 +17,73 @@
 
 ---
 
-## PoC Timeline: 1-2 Days
+## PoC Timeline: Already Functional / Minor Polish: 2-4 Hours
 
-Build a rudimentary but functional version. All data manageable through basic UI.
-
-### Day 1: Database + API
+The core task delegation pipeline is already working. Only minor polish needed before demo.
 
 | Task | Time |
 |------|------|
-| Replace hardcoded data with SQLite tables (departments, people, tasks) | 1-2h |
-| Seed DB with current mock data (auto-populate on first run) | 30min |
-| CRUD API endpoints for departments (GET/POST/PUT/DELETE) | 1h |
-| CRUD API endpoints for people (GET/POST/PUT/DELETE) | 1h |
-| Tasks API: list all, update status | 30min |
-| Router reads org structure from DB instead of hardcoded dict | 1h |
-| Voice-routed tasks auto-save to tasks table | 30min |
-
-### Day 2: UI + Testing
-
-| Task | Time |
-|------|------|
-| Add "CRM" tab with departments table (view, add, delete) | 1h |
-| Add people table with department dropdown | 1h |
-| Add tasks table with status update (pending → completed) | 1h |
-| End-to-end test: record → route → task appears in CRM table | 1h |
-| Fix bugs, polish basic layout | 1-2h |
+| Save routed tasks to a simple list (in-memory or SQLite, no full CRM) | 1h |
+| Add task history view in UI (list of past routed tasks) | 1h |
+| Test with real voice input in browser, fix any issues | 1-2h |
 
 ### PoC Deliverables
 
-- Working web app on localhost:8010
-- Voice task delegation → AI routing → task saved to DB
+- Working web app: record voice → AI transcribes → routes to person/department → shows result
 - Long-form recording → queued → transcribed → stored
-- Basic management: add/edit/remove departments and people
-- Task list with status tracking
+- Task history: list of all routed tasks from this session
+- Mock org data sufficient for demo purposes
+
+### What's NOT in PoC (deferred to later)
+
+- CRM management UI (departments/people CRUD)
+- User authentication
+- Database migration (SQLite → PostgreSQL)
+- Notifications
+- Photo attachments
 
 ---
 
-## Production Timeline: 3-4 Weeks
+## Production Timeline: 2-3 Weeks
 
-Build a reliable, deployable system ready for real office use.
+Build a reliable, deployable system. CRM integration added as a separate phase after core delegation is solid.
 
-### Week 1: Database + Auth + CRM
-
-| Task | Time |
-|------|------|
-| Migrate SQLite → PostgreSQL | 1 day |
-| User authentication (login, sessions) | 1 day |
-| Role-based access (admin vs. regular user) | 1 day |
-| Full CRM UI: departments, people, tasks with search/filter | 1 day |
-| Data import tool (CSV/Excel bulk import for existing org data) | 1 day |
-
-### Week 2: Voice Pipeline Hardening
+### Week 1: Hardening + Deploy / 第1周：加固 + 部署
 
 | Task | Time |
 |------|------|
+| Replace hardcoded org data with SQLite tables + simple seed | 1 day |
 | Long-form audio: robust chunked upload with retry/resume | 1 day |
-| Processing status: real-time progress via WebSocket or SSE | 1 day |
 | Audio format compatibility (WAV, MP3, M4A, WebM) | 1 day |
 | Error handling: graceful degradation, clear error messages in Chinese | 1 day |
-| Fallback AI pipeline (if primary model unavailable) | 1 day |
+| Cloud server setup + nginx reverse proxy + deploy | 1 day |
 
-### Week 3: Task Management + Notifications
+### Week 2: Task Lifecycle + Notifications / 第2周：任务生命周期 + 通知
 
 | Task | Time |
 |------|------|
 | Task lifecycle: pending → assigned → in_progress → completed → archived | 1 day |
+| User authentication (login, sessions) | 1 day |
 | Task assignment notifications (email or push) | 1 day |
-| Task dashboard: statistics, filters, overdue alerts | 1 day |
-| Photo attachment support (upload, store, display) | 1 day |
+| Task dashboard: filters, status tracking | 1 day |
 | Transcript review/approval UI (for long-form) | 1 day |
 
-### Week 4: Deploy + Polish
+### Week 3 (if needed): CRM Integration + Polish / 第3周（如需）：CRM 集成 + 打磨
 
 | Task | Time |
 |------|------|
-| Cloud server setup + PostgreSQL + nginx reverse proxy | 1 day |
-| HTTPS + basic security hardening | 1 day |
-| Load testing (simulate concurrent users) | 1 day |
-| Mobile-responsive UI polish | 1 day |
-| Documentation + deployment runbook | 1 day |
+| Migrate SQLite → PostgreSQL | 1 day |
+| CRM integration or lightweight CRM build | 2-3 days |
+| Photo attachment support | 1 day |
 
 ### Production Deliverables
 
-- Deployed on cloud server with PostgreSQL
-- User login and role-based access
-- Full task lifecycle with notifications
+- Deployed on cloud server
+- Voice task delegation → AI routing → task saved and tracked
+- User login and task ownership
+- Task lifecycle with notifications
 - Long-form transcription with real-time progress
-- Photo attachments
-- Mobile-responsive interface
-- Deployment documentation
+- CRM integration (or built-in lightweight CRM)
 
 ---
 
@@ -113,8 +91,8 @@ Build a reliable, deployable system ready for real office use.
 
 | Phase | Time | What You Get |
 |-------|------|-------------|
-| **PoC** | 1-2 days | Working demo, basic CRM, all core features functional |
-| **Production** | 3-4 weeks | Deployed system, auth, notifications, hardened pipeline |
+| **PoC** | Done + 2-4h polish | Voice → route → result, working demo |
+| **Production** | 2-3 weeks | Deployed system, auth, notifications, CRM |
 
 ---
 
@@ -139,95 +117,73 @@ Build a reliable, deployable system ready for real office use.
 
 ---
 
-## PoC 时间：1-2 天
+## PoC 时间：功能已完成 / 微调打磨：2-4 小时
 
-搭建一个简陋但能跑通的版本，所有数据可以通过基础界面管理。
-
-### 第1天：数据库 + API
+任务委派核心流程已经跑通，只需微调即可用于演示。
 
 | 任务 | 时间 |
 |------|------|
-| 将硬编码数据替换为 SQLite 表（部门、人员、任务） | 1-2h |
-| 用现有模拟数据初始化数据库（首次运行自动填充） | 30min |
-| 部门 CRUD API（GET/POST/PUT/DELETE） | 1h |
-| 人员 CRUD API（GET/POST/PUT/DELETE） | 1h |
-| 任务 API：列表、更新状态 | 30min |
-| 路由器从数据库读取组织架构（替代硬编码） | 1h |
-| 语音路由结果自动存入任务表 | 30min |
-
-### 第2天：界面 + 测试
-
-| 任务 | 时间 |
-|------|------|
-| 添加"CRM管理"Tab，部门表格（查看、新增、删除） | 1h |
-| 人员表格，含部门下拉选择 | 1h |
-| 任务表格，含状态更新（pending → completed） | 1h |
-| 端到端测试：录音 → 路由 → 任务出现在 CRM 表中 | 1h |
-| 修 Bug，基础布局调整 | 1-2h |
+| 将路由结果保存为简单列表（内存或 SQLite，不做完整 CRM） | 1h |
+| 添加任务历史记录界面（展示过去路由过的任务） | 1h |
+| 用真实语音输入测试，修复问题 | 1-2h |
 
 ### PoC 交付物
 
-- localhost:8010 上可运行的 Web 应用
-- 语音任务委派 → AI 路由 → 任务存入数据库
+- 可运行的 Web 应用：录音 → AI 转录 → 路由到人员/部门 → 展示结果
 - 长篇录音 → 排队 → 转录 → 存储
-- 基础管理：增删改查部门和人员
-- 任务列表及状态追踪
+- 任务历史：当前会话所有路由任务的列表
+- 模拟组织数据足够演示使用
+
+### PoC 不包含（后续再做）
+
+- CRM 管理界面（部门/人员增删改查）
+- 用户认证
+- 数据库迁移（SQLite → PostgreSQL）
+- 通知推送
+- 照片附件
 
 ---
 
-## 生产版时间：3-4 周
+## 生产版时间：2-3 周
 
-搭建一个可靠、可部署、适合办公室实际使用的系统。
+搭建可靠、可部署的系统。CRM 集成作为核心委派功能稳定后的独立阶段。
 
-### 第1周：数据库 + 认证 + CRM
-
-| 任务 | 时间 |
-|------|------|
-| SQLite 迁移至 PostgreSQL | 1 天 |
-| 用户认证（登录、会话） | 1 天 |
-| 角色权限（管理员 vs 普通用户） | 1 天 |
-| 完整 CRM 界面：部门、人员、任务，含搜索/筛选 | 1 天 |
-| 数据导入工具（CSV/Excel 批量导入现有组织数据） | 1 天 |
-
-### 第2周：语音管道加固
+### 第1周：加固 + 部署
 
 | 任务 | 时间 |
 |------|------|
+| 将硬编码组织数据替换为 SQLite 表 + 简单初始化 | 1 天 |
 | 长篇音频：分块上传 + 断点续传 + 重试 | 1 天 |
-| 处理状态：WebSocket 或 SSE 实时进度 | 1 天 |
 | 音频格式兼容（WAV、MP3、M4A、WebM） | 1 天 |
 | 错误处理：优雅降级、中文错误提示 | 1 天 |
-| 备用 AI 管道（主力模型不可用时自动切换） | 1 天 |
+| 云服务器搭建 + nginx 反向代理 + 部署 | 1 天 |
 
-### 第3周：任务管理 + 通知
+### 第2周：任务生命周期 + 通知
 
 | 任务 | 时间 |
 |------|------|
 | 任务生命周期：pending → assigned → in_progress → completed → archived | 1 天 |
+| 用户认证（登录、会话） | 1 天 |
 | 任务分配通知（邮件或推送） | 1 天 |
-| 任务看板：统计、筛选、逾期预警 | 1 天 |
-| 照片附件支持（上传、存储、展示） | 1 天 |
+| 任务看板：筛选、状态追踪 | 1 天 |
 | 转录审核/确认界面（长篇转录） | 1 天 |
 
-### 第4周：部署 + 打磨
+### 第3周（如需）：CRM 集成 + 打磨
 
 | 任务 | 时间 |
 |------|------|
-| 云服务器搭建 + PostgreSQL + nginx 反向代理 | 1 天 |
-| HTTPS + 基础安全加固 | 1 天 |
-| 负载测试（模拟并发用户） | 1 天 |
-| 移动端适配 UI 打磨 | 1 天 |
-| 文档 + 部署手册 | 1 天 |
+| SQLite 迁移至 PostgreSQL | 1 天 |
+| CRM 集成或搭建轻量级 CRM | 2-3 天 |
+| 照片附件支持 | 1 天 |
 
 ### 生产版交付物
 
-- 部署在云服务器上，使用 PostgreSQL
-- 用户登录和角色权限
+- 部署在云服务器上
+- 语音任务委派 → AI 路由 → 任务保存并追踪
+- 用户登录和任务归属
 - 完整任务生命周期 + 通知
 - 长篇转录 + 实时进度
-- 照片附件
-- 移动端适配界面
-- 部署文档
+- CRM 集成（或自建轻量 CRM）
 
 ---
 
@@ -235,5 +191,5 @@ Build a reliable, deployable system ready for real office use.
 
 | 阶段 | 时间 | 交付内容 |
 |------|------|---------|
-| **PoC** | 1-2 天 | 可运行演示，基础 CRM，核心功能全部跑通 |
-| **生产版** | 3-4 周 | 部署上线的系统，认证、通知、加固管道 |
+| **PoC** | 已完成 + 2-4h 打磨 | 语音 → 路由 → 结果，可运行演示 |
+| **生产版** | 2-3 周 | 部署上线的系统，认证、通知、CRM |
