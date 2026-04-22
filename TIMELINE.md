@@ -42,6 +42,18 @@ The core task delegation pipeline is already working. Only minor polish needed b
 - Notifications
 - Photo attachments
 
+### How Task Delegation Works
+
+The system uses an employee list with responsibilities to match tasks to the right person:
+
+1. **Employee list** defined in `core/org_structure.py` — each person has name, department, title, and responsibilities
+2. **Voice input** → ASR transcribes → text sent to GLM-4-flash
+3. **AI routing** — GLM receives the org structure as context, uses function calling to pick the best assignee based on task content and employee responsibilities
+4. **Fallback** — if AI unavailable, keyword matching against responsibilities (e.g. "设备" → equipment department)
+5. **Result** — task description + assigned person + department + priority + reason displayed in UI
+
+**To customize for client**: replace the mock data in `core/org_structure.py` with real employee names and responsibilities. No code changes needed, just data.
+
 ---
 
 ## Production Timeline: 2-3 Weeks
@@ -141,6 +153,18 @@ Build a reliable, deployable system. CRM integration added as a separate phase a
 - 数据库迁移（SQLite → PostgreSQL）
 - 通知推送
 - 照片附件
+
+### 任务委派逻辑
+
+系统通过员工及其职责列表来智能匹配任务：
+
+1. **员工列表** 定义在 `core/org_structure.py` — 每人有姓名、部门、职位、职责范围
+2. **语音输入** → ASR 转录 → 文本发送给 GLM-4-flash
+3. **AI 路由** — GLM 接收组织架构作为上下文，通过函数调用根据任务内容和员工职责选择最合适的委派人
+4. **Fallback** — AI 不可用时，按职责关键词匹配（如"设备"→设备部门）
+5. **结果** — 任务描述 + 委派人 + 部门 + 优先级 + 理由，展示在界面
+
+**为客户定制**：将 `core/org_structure.py` 中的模拟数据替换为真实员工姓名和职责即可，无需改代码，只改数据。
 
 ---
 
