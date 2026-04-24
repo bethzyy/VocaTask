@@ -2,6 +2,7 @@
 import threading
 import time
 import logging
+from datetime import datetime
 
 from core.storage import Database
 from core.asr import ASRService
@@ -54,7 +55,7 @@ class TranscriptionQueue:
             result = self.asr.transcribe_long(audio_path, progress_callback=on_progress)
             if result["success"]:
                 self.db.update_job(job_id, status="completed", text_result=result["text"],
-                                   completed_at="CURRENT_TIMESTAMP")
+                                   completed_at=datetime.now().isoformat())
                 logger.info("Job %s completed: %d segments", job_id, result.get("segments", 0))
             else:
                 self.db.update_job(job_id, status="failed", error_message=result.get("error", "Unknown error"))

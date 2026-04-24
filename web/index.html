@@ -3,14 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VocaTask — 语音任务路由</title>
+<title>VocaTask</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div class="app">
   <header class="header">
     <h1>VocaTask</h1>
-    <p class="subtitle">语音任务路由与转录系统</p>
+    <p class="subtitle">语音任务路由</p>
   </header>
 
   <nav class="tabs">
@@ -18,43 +21,49 @@
     <button class="tab" data-tab="long">长篇转录</button>
   </nav>
 
-  <!-- Quick Task Panel -->
+  <!-- Quick Task: Chat UI -->
   <section id="panel-quick" class="panel active">
-    <div class="recorder-area">
-      <div class="timer" id="quick-timer">00:00</div>
-      <button class="btn-record" id="quick-record-btn">
-        <span class="icon">&#9679;</span> 按住说话
-      </button>
-      <p class="hint" id="quick-hint">点击按钮开始录音</p>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-welcome">
+        <div class="chat-welcome-icon">VT</div>
+        <p>你好，我是 VocaTask</p>
+        <p>点击下方按钮，说出你的任务</p>
+      </div>
     </div>
-    <div class="result-area" id="quick-result" style="display:none"></div>
+    <div class="chat-input-bar">
+      <div class="attachment-preview-bar" id="quick-preview"></div>
+      <div class="chat-input-row">
+        <label class="btn-icon" for="quick-camera-input" title="拍照">&#128247;</label>
+        <label class="btn-icon" for="quick-file-input" title="选择图片">&#128206;</label>
+        <input type="file" id="quick-camera-input" accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="quick-file-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="display:none">
+        <button class="btn-record-chat" id="quick-record-btn">
+          <span class="record-dot"></span>
+          <span id="quick-timer">点击录音</span>
+        </button>
+      </div>
+    </div>
   </section>
 
-  <!-- Long Transcription Panel -->
+  <!-- Long Transcription -->
   <section id="panel-long" class="panel">
-    <div class="recorder-area">
-      <div class="timer" id="long-timer">00:00</div>
-      <button class="btn-record btn-long" id="long-record-btn">
-        <span class="icon">&#9679;</span> 开始长录音
-      </button>
-      <button class="btn-stop" id="long-stop-btn" style="display:none">
-        &#9632; 停止录音
-      </button>
-      <p class="hint" id="long-hint">适用于会议、巡检等长时录音</p>
+    <div class="long-scroll">
+      <div class="recorder-area">
+        <div class="timer" id="long-timer">00:00</div>
+        <button class="btn-record btn-long" id="long-record-btn">
+          <span class="icon">&#9679;</span> 开始长录音
+        </button>
+        <button class="btn-stop" id="long-stop-btn" style="display:none">
+          &#9632; 停止录音
+        </button>
+        <p class="hint" id="long-hint">适用于会议、巡检等长时录音</p>
+      </div>
+      <div class="status-area" id="long-status" style="display:none"></div>
+      <div class="result-area" id="long-result" style="display:none"></div>
     </div>
-    <div class="status-area" id="long-status" style="display:none"></div>
-    <div class="result-area" id="long-result" style="display:none"></div>
   </section>
 
-  <!-- History -->
-  <section class="history" id="history-section">
-    <h3>历史记录</h3>
-    <div id="history-list" class="history-list">
-      <p class="empty-hint">暂无记录</p>
-    </div>
-  </section>
 </div>
-
 <script src="/static/app.js"></script>
 </body>
 </html>

@@ -17,14 +17,18 @@
 
 ## Current Status
 
-| Module | Status |
-|--------|--------|
-| Voice recording + upload | Done |
-| ASR transcription (ZhipuAI GLM-ASR-2512) | Done |
-| Task routing (GLM-4-flash function calling + keyword fallback) | Done |
-| Long-form transcription queue (background worker + ffmpeg segmentation) | Done |
-| Browser UI (recording, results display, status polling) | Done |
-| Mock org data (10 people, 5 departments, hardcoded) | Done |
+| Module | Status | Completed |
+|--------|--------|-----------|
+| Voice recording + upload | ✅ Done | 2026-04-22 |
+| ASR transcription (ZhipuAI GLM-ASR-2512) | ✅ Done | 2026-04-22 |
+| Task routing (GLM-4-flash function calling + keyword fallback) | ✅ Done | 2026-04-22 |
+| Long-form transcription queue (background worker + ffmpeg segmentation) | ✅ Done | 2026-04-22 |
+| Browser UI (recording, results display, status polling) | ✅ Done | 2026-04-22 |
+| Mock org data (10 people, 5 departments, hardcoded) | ✅ Done | 2026-04-22 |
+| Save routed tasks to SQLite (routing_history table) | ✅ Done | 2026-04-24 |
+| Task history view in UI (/api/history endpoint) | ✅ Done | 2026-04-24 |
+| CRM task management UI (crm_server.py + web/crm/) | 🚧 In Progress | — |
+| Image attachments + Vision AI (GLM-4V-Flash) | 🚧 In Progress | — |
 
 ---
 
@@ -34,11 +38,11 @@
 
 The core task delegation pipeline is already working. Only minor polish needed before demo.
 
-| Task | Time |
-|------|------|
-| Save routed tasks to a simple list (in-memory or SQLite, no full CRM) | 1h |
-| Add task history view in UI (list of past routed tasks) | 1h |
-| Test with real voice input in browser, fix any issues | 1-2h |
+| Task | Time | Status |
+|------|------|--------|
+| Save routed tasks to a simple list (in-memory or SQLite, no full CRM) | 1h | ✅ Done 2026-04-24 |
+| Add task history view in UI (list of past routed tasks) | 1h | ✅ Done 2026-04-24 |
+| Test with real voice input in browser, fix any issues | 1-2h | ⏳ In Progress |
 
 Test on real phone: open `http://<server-ip>:8010` in phone browser, use microphone — works immediately, no installation needed.
 
@@ -129,44 +133,89 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | App Store / Google Play submission and review | 3-7 days (waiting) |
 | **Total** | **+1-2 weeks active dev + 1 week review** |
 
-### Deployment: Cloud Server vs. On-Premise
+### Deployment: Network Architecture & Hosting Options
 
-| | Cloud Server | Company Intranet |
-|--|-------------|-----------------|
-| Setup time | 1 day | 3-5 days |
-| External access (4G/5G) | Built-in | Requires VPN or reverse proxy |
-| SSL/HTTPS | Free (Let's Encrypt) | Self-signed cert or internal CA |
-| Firewall config | Minimal | Coordinate with IT department |
-| Database | Managed PostgreSQL available | Install and maintain ourselves |
-| Maintenance | Cloud provider handles hardware | Client's IT handles hardware |
-| Cost | ~100-200 CNY/month | No monthly cost (existing hardware) |
-| Data sovereignty | Data leaves company network | Data stays on-site |
+**System architecture** — the server is the central hub; phone and CRM computer are both browser clients:
 
-**Cloud server deployment: 1 day**
+```
+                    ┌─────────────────────────────┐
+                    │  Server (fixed address)      │
+                    │  server.py      port 8010    │
+                    │  crm_server.py  port 8011    │
+                    │  SQLite database             │
+                    └────────────┬────────────────┘
+                                 │
+               ┌─────────────────┴──────────────────┐
+               ▼                                     ▼
+  📱 Phone (browser client)             💻 Computer (CRM browser)
+  Records audio → uploads task          Views & manages tasks
+  Works on any network (WiFi / 4G/5G)   Opens CRM dashboard
+```
+
+> **Important**: The server must NOT run on the phone. The phone is a browser client only. Phones on 4G/5G have no public IP (carrier-grade NAT) — they cannot be reached from outside.
+
+**Three deployment options:**
+
+| | Option A: VPS Cloud Server | Option B: Company Server + Cloudflare Tunnel | Option C: Company Server + IT Setup |
+|--|---|---|---|
+| **Phase** | Production | **PoC / Demo only** | Production |
+| **Cost** | 60–200 CNY/month | Free | No extra cost |
+| **Setup time** | 3–4 hours | 30 min | 3–5 days |
+| **Data location** | Cloud (outside company) | Company server | Company server |
+| **Data via 3rd party** | No | Yes (Cloudflare, encrypted) | No |
+| **IT involvement** | No | No | Yes |
+| **HTTPS** | Manual (Let's Encrypt) | Automatic | Manual (internal CA) |
+| **Recommended for** | Production, non-sensitive data | PoC demos & testing | Sensitive data / compliance |
+
+> Option B (Cloudflare Tunnel) is a **PoC shortcut only** — it uses the company server as the host but routes traffic through Cloudflare's network. For production, choose Option A or C.
+
+**Option A setup: VPS Cloud Server (3–4 hours)**
 
 | Task | Time |
 |------|------|
 | Provision server (Alibaba Cloud / Tencent Cloud) | 1h |
-| Install Python, PostgreSQL, nginx | 1-2h |
+| Install Python, PostgreSQL, nginx | 1–2h |
 | Deploy backend code, configure systemd service | 1h |
 | HTTPS setup (Let's Encrypt) | 30min |
 | DNS configuration | 30min |
 | Smoke test + verify from mobile | 1h |
 
-**On-premise deployment: 3-5 days**
+**Option B setup: Cloudflare Tunnel (30 min, run on company server)**
+
+```bash
+curl -L -o cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared.deb
+
+cloudflared tunnel --url http://localhost:8010  # → phone uses this HTTPS URL
+cloudflared tunnel --url http://localhost:8011  # → computer uses this HTTPS URL for CRM
+```
+
+No firewall changes needed. Cloudflare provides HTTPS automatically.
+
+**Option C setup: Company Server + IT Network (3–5 days)**
 
 | Task | Time |
 |------|------|
 | Coordinate with client IT (server access, OS, network) | 1 day |
 | Install Python, PostgreSQL, nginx on internal server | 1 day |
 | Firewall / port configuration for mobile access | 1 day |
-| VPN or reverse proxy setup (for 4G/5G access from field) | 1-2 days |
+| VPN or reverse proxy setup (for 4G/5G access from field) | 1–2 days |
 | Internal SSL cert or self-signed | 1h |
 | Smoke test from inside and outside network | 1h |
 
+**Decision guide:**
+
+| Your situation | Use this option |
+|----------------|----------------|
+| Need a quick demo / PoC on real device | **Option B** — free, 30 min, no IT needed |
+| Going to production, data is not sensitive | **Option A** — stable, fully controlled, low cost |
+| Going to production, data must stay on company premises | **Option C** — data never leaves company network |
+
+---
+
 ### Full Production Timeline (by Scenario)
 
-**Scenario A: Cloud Server + Browser Access**
+**Scenario A: Cloud Server + Browser Access** *(uses Deployment Option A)*
 
 | Phase | Time | Tasks |
 |-------|------|-------|
@@ -176,7 +225,7 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | Week 4 (optional) | 5 days | CRM integration, photo attachments |
 | **Total** | **3-4 weeks** | |
 
-**Scenario B: Cloud Server + React Native App**
+**Scenario B: Cloud Server + React Native App** *(uses Deployment Option A)*
 
 | Phase | Time | Tasks |
 |-------|------|-------|
@@ -186,7 +235,7 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | Week 6 | 3-7 days | App Store / Google Play review (waiting) |
 | **Total** | **4-5 weeks + review** | |
 
-**Scenario C: On-Premise + Browser Access**
+**Scenario C: On-Premise + Browser Access** *(uses Deployment Option C)*
 
 | Phase | Time | Tasks |
 |-------|------|-------|
@@ -195,7 +244,7 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | Week 4 (optional) | 5 days | CRM integration, photo attachments |
 | **Total** | **3-4 weeks** | (but may slip if IT coordination slow) |
 
-**Scenario D: On-Premise + React Native App**
+**Scenario D: On-Premise + React Native App** *(uses Deployment Option C)*
 
 | Phase | Time | Tasks |
 |-------|------|-------|
@@ -233,14 +282,18 @@ The system uses an employee list with responsibilities to match tasks to the rig
 
 ## 当前进度
 
-| 模块 | 状态 |
-|------|------|
-| 语音录制 + 上传 | 已完成 |
-| ASR 转录（智谱 GLM-ASR-2512） | 已完成 |
-| 任务路由（GLM-4-flash 函数调用 + 关键词 fallback） | 已完成 |
-| 长篇转录队列（后台 Worker + ffmpeg 分片） | 已完成 |
-| 浏览器 UI（录音、结果展示、状态轮询） | 已完成 |
-| 模拟组织数据（10 人、5 部门，硬编码） | 已完成 |
+| 模块 | 状态 | 完成时间 |
+|------|------|---------|
+| 语音录制 + 上传 | ✅ 已完成 | 2026-04-22 |
+| ASR 转录（智谱 GLM-ASR-2512） | ✅ 已完成 | 2026-04-22 |
+| 任务路由（GLM-4-flash 函数调用 + 关键词 fallback） | ✅ 已完成 | 2026-04-22 |
+| 长篇转录队列（后台 Worker + ffmpeg 分片） | ✅ 已完成 | 2026-04-22 |
+| 浏览器 UI（录音、结果展示、状态轮询） | ✅ 已完成 | 2026-04-22 |
+| 模拟组织数据（10 人、5 部门，硬编码） | ✅ 已完成 | 2026-04-22 |
+| 路由结果存入 SQLite（routing_history 表） | ✅ 已完成 | 2026-04-24 |
+| 任务历史记录界面（/api/history 接口） | ✅ 已完成 | 2026-04-24 |
+| CRM 任务管理界面（crm_server.py + web/crm/） | 🚧 开发中 | — |
+| 图片附件 + 视觉 AI（GLM-4V-Flash） | 🚧 开发中 | — |
 
 ---
 
@@ -250,11 +303,11 @@ The system uses an employee list with responsibilities to match tasks to the rig
 
 任务委派核心流程已经跑通，只需微调即可用于演示。
 
-| 任务 | 时间 |
-|------|------|
-| 将路由结果保存为简单列表（内存或 SQLite，不做完整 CRM） | 1h |
-| 添加任务历史记录界面（展示过去路由过的任务） | 1h |
-| 用真实语音输入测试，修复问题 | 1-2h |
+| 任务 | 时间 | 状态 |
+|------|------|------|
+| 将路由结果保存为简单列表（内存或 SQLite，不做完整 CRM） | 1h | ✅ 已完成 2026-04-24 |
+| 添加任务历史记录界面（展示过去路由过的任务） | 1h | ✅ 已完成 2026-04-24 |
+| 用真实语音输入测试，修复问题 | 1-2h | ⏳ 进行中 |
 
 手机测试：手机浏览器打开 `http://<服务器IP>:8010`，使用麦克风 — 无需安装，立即可用。
 
@@ -345,44 +398,89 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | App Store / Google Play 提交审核 | 3-7 天（等待） |
 | **合计** | **+1-2 周开发 + 1 周审核** |
 
-### 部署：云服务器 vs 公司内网
+### 部署：网络架构与托管方案
 
-| | 云服务器 | 公司内网 |
-|--|---------|---------|
-| 搭建时间 | 1 天 | 3-5 天 |
-| 外网访问（4G/5G） | 天然支持 | 需要 VPN 或反向代理 |
-| SSL/HTTPS | 免费（Let's Encrypt） | 自签名证书或内部 CA |
-| 防火墙配置 | 基本不需要 | 需与 IT 部门协调 |
-| 数据库 | 云托管 PostgreSQL 可用 | 自己安装维护 |
-| 运维 | 云服务商处理硬件 | 客户 IT 处理硬件 |
-| 费用 | 约 100-200 元/月 | 无月费（用现有硬件） |
-| 数据安全 | 数据离开公司网络 | 数据留在公司内部 |
+**系统架构** — 服务器是中心节点，手机和电脑都是浏览器客户端：
 
-**云服务器部署：1 天**
+```
+                    ┌─────────────────────────────┐
+                    │  服务器（固定地址）            │
+                    │  server.py      端口 8010    │
+                    │  crm_server.py  端口 8011    │
+                    │  SQLite 数据库               │
+                    └────────────┬────────────────┘
+                                 │
+               ┌─────────────────┴──────────────────┐
+               ▼                                     ▼
+  📱 手机（浏览器客户端）                  💻 电脑（CRM 浏览器）
+  录音 → 上传任务                         查看和管理任务
+  支持任意网络（WiFi / 4G/5G）            打开 CRM 看板
+```
+
+> **重要**：服务器不能跑在手机上。手机只是浏览器客户端。手机在 4G/5G 下没有公网 IP（运营商级 NAT），无法被外部直接连接。
+
+**三种部署方案：**
+
+| | 方案 A：VPS 云服务器 | 方案 B：公司服务器 + Cloudflare Tunnel | 方案 C：公司服务器 + IT 正式开通 |
+|--|---|---|---|
+| **适用阶段** | 生产 | **仅 PoC / 演示** | 生产 |
+| **费用** | 60–200 元/月 | 免费 | 无额外费用 |
+| **搭建时间** | 3–4 小时 | 30 分钟 | 3–5 天 |
+| **数据位置** | 云端（公司外） | 公司服务器 | 公司服务器 |
+| **数据经过第三方** | 否 | 是（Cloudflare，传输加密） | 否 |
+| **需要找 IT** | 否 | 否 | 是 |
+| **HTTPS** | 手动配置（Let's Encrypt） | 自动 | 手动配置（内部 CA） |
+| **推荐场景** | 生产，数据不敏感 | PoC 演示、测试 | 生产，数据合规要求高 |
+
+> 方案 B（Cloudflare Tunnel）是 **PoC 快捷方式**：服务器仍在公司，但流量经 Cloudflare 中转。正式生产请选方案 A 或 C。
+
+**方案 A 搭建步骤（3–4 小时）**
 
 | 任务 | 时间 |
 |------|------|
 | 购买服务器（阿里云/腾讯云） | 1h |
-| 安装 Python、PostgreSQL、nginx | 1-2h |
+| 安装 Python、PostgreSQL、nginx | 1–2h |
 | 部署后端代码，配置 systemd 服务 | 1h |
 | HTTPS 配置（Let's Encrypt） | 30min |
 | DNS 域名配置 | 30min |
 | 冒烟测试 + 手机访问验证 | 1h |
 
-**公司内网部署：3-5 天**
+**方案 B 搭建步骤（30 分钟，在公司服务器上执行）**
+
+```bash
+curl -L -o cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared.deb
+
+cloudflared tunnel --url http://localhost:8010  # → 手机用此 HTTPS 地址发任务
+cloudflared tunnel --url http://localhost:8011  # → 电脑用此 HTTPS 地址打开 CRM
+```
+
+无需改防火墙，Cloudflare 自动提供 HTTPS。
+
+**方案 C 搭建步骤（3–5 天）**
 
 | 任务 | 时间 |
 |------|------|
 | 与客户 IT 协调（服务器访问、操作系统、网络） | 1 天 |
 | 内网服务器安装 Python、PostgreSQL、nginx | 1 天 |
 | 防火墙/端口配置（让手机能访问） | 1 天 |
-| VPN 或反向代理搭建（让外场 4G/5G 能访问） | 1-2 天 |
+| VPN 或反向代理搭建（让外场 4G/5G 能访问） | 1–2 天 |
 | 内部 SSL 证书或自签名 | 1h |
 | 内网 + 外网冒烟测试 | 1h |
 
+**决策指南：**
+
+| 你的情况 | 选这个方案 |
+|---------|----------|
+| 需要快速演示 / PoC 真机测试 | **方案 B** — 免费、30 分钟、无需找 IT |
+| 正式上线，数据不涉及敏感信息 | **方案 A** — 稳定、可控、成本低 |
+| 正式上线，数据必须留在公司内部 | **方案 C** — 数据不离开公司网络 |
+
+---
+
 ### 完整生产版时间（按场景）
 
-**场景 A：云服务器 + 浏览器访问**
+**场景 A：云服务器 + 浏览器访问** *（对应部署方案 A）*
 
 | 阶段 | 时间 | 任务 |
 |------|------|------|
@@ -392,7 +490,7 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | 第4周（可选） | 5 天 | CRM 集成、照片附件 |
 | **合计** | **3-4 周** | |
 
-**场景 B：云服务器 + React Native App**
+**场景 B：云服务器 + React Native App** *（对应部署方案 A）*
 
 | 阶段 | 时间 | 任务 |
 |------|------|------|
@@ -402,7 +500,7 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | 第6周 | 3-7 天 | App Store / Google Play 审核（等待） |
 | **合计** | **4-5 周 + 审核** | |
 
-**场景 C：公司内网 + 浏览器访问**
+**场景 C：公司内网 + 浏览器访问** *（对应部署方案 C）*
 
 | 阶段 | 时间 | 任务 |
 |------|------|------|
@@ -411,7 +509,7 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | 第4周（可选） | 5 天 | CRM 集成、照片附件 |
 | **合计** | **3-4 周** | （但 IT 协调慢的话可能延期） |
 
-**场景 D：公司内网 + React Native App**
+**场景 D：公司内网 + React Native App** *（对应部署方案 C）*
 
 | 阶段 | 时间 | 任务 |
 |------|------|------|
@@ -436,3 +534,27 @@ The system uses an employee list with responsibilities to match tasks to the rig
 | **生产版 D**（内网 + App） | 5-6 周 + 审核 | 同 C + 原生移动 App |
 
 **建议**：PoC 用方案2最快在真机上验证。生产版用场景A最快上线。
+
+---
+
+## 时间线变更记录
+
+> 每次需求变更、技术约束或业务决策导致时间线调整时，在此追加一条记录。
+> 格式：触发原因 → 具体调整 → 影响阶段。
+
+---
+
+*（暂无记录，以下为格式示例）*
+
+<!--
+### YYYY-MM-DD — 变更标题（一句话概括）
+
+**触发**: 描述是什么导致了这次变更（需求变更 / 技术约束 / 业务决策 / 客户反馈）
+
+**调整**:
+- 新增：XXX（预计 X 天）
+- 删除/推迟：XXX
+- 修改：XXX 从 X 天改为 X 天
+
+**影响阶段**: 列出受波及的 PoC / 生产版阶段，以及整体时间线变化（提前/推迟多少）
+-->

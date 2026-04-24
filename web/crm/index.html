@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocaTask CRM — 任务管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/crm.css">
+</head>
+<body>
+<div class="crm-app">
+
+  <!-- Top Nav -->
+  <header class="crm-nav">
+    <div class="nav-brand">
+      <span class="nav-logo">VocaTask</span>
+      <span class="nav-sub">CRM</span>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-view="all">全部任务</button>
+      <button class="nav-tab" data-view="mine">我的任务</button>
+    </nav>
+    <div class="nav-right">
+      <span class="nav-label">当前用户：</span>
+      <select id="user-select" class="user-select">
+        <option value="">选择用户</option>
+        <option>张三</option>
+        <option>孙八</option>
+        <option>李四</option>
+        <option>周九</option>
+        <option>王五</option>
+        <option>吴十</option>
+        <option>赵六</option>
+        <option>郑冬</option>
+        <option>钱七</option>
+        <option>陈明</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card" data-filter="open">
+      <span class="stat-num" id="stat-open">—</span>
+      <span class="stat-label">待处理</span>
+    </div>
+    <div class="stat-card" data-filter="in_progress">
+      <span class="stat-num" id="stat-progress">—</span>
+      <span class="stat-label">处理中</span>
+    </div>
+    <div class="stat-card" data-filter="completed">
+      <span class="stat-num" id="stat-done">—</span>
+      <span class="stat-label">已完成</span>
+    </div>
+    <div class="stat-card" data-filter="">
+      <span class="stat-num" id="stat-total">—</span>
+      <span class="stat-label">全部</span>
+    </div>
+    <div class="stats-actions">
+      <select id="filter-status" class="filter-select">
+        <option value="">全部状态</option>
+        <option value="open">待处理</option>
+        <option value="in_progress">处理中</option>
+        <option value="completed">已完成</option>
+      </select>
+      <button class="btn-refresh" id="btn-refresh" title="刷新">↻ 刷新</button>
+      <span class="refresh-hint" id="refresh-hint"></span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="crm-main">
+
+    <!-- Task List View -->
+    <div id="view-list" class="view active">
+      <div id="task-list" class="task-list">
+        <div class="empty-state">加载中...</div>
+      </div>
+    </div>
+
+    <!-- Task Detail View -->
+    <div id="view-detail" class="view">
+      <button class="btn-back" id="btn-back">← 返回列表</button>
+      <div id="task-detail-content"></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/crm.js"></script>
+</body>
+</html>

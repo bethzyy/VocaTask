@@ -29,18 +29,30 @@ class ASRService:
         if not path.exists():
             return {"success": False, "text": "", "error": f"File not found: {audio_path}"}
 
-        # Try direct transcription first; if format rejected, convert via ffmpeg
+        # Proactive conversion: WebM/OGG are known unsupported by ZhipuAI ASR
+        needs_wav = path.suffix.lower() in {".webm", ".ogg"}
+        if needs_wav:
+            logger.info("Converting %s to WAV via ffmpeg (proactive)", path.name)
+            wav_path = self._convert_to_wav(path)
+            if wav_path:
+                result = self._transcribe_with_retry(str(wav_path), max_retries)
+                try:
+                    wav_path.unlink()
+                except Exception:
+                    pass
+                return result
+            return {"success": False, "text": "", "error": "ffmpeg conversion failed"}
+
+        # For other formats, try directly; convert on format error
         result = self._transcribe_with_retry(str(path), max_retries)
         if result["success"]:
             return result
 
-        # If format issue, try converting to wav
         if result.get("needs_conversion"):
-            logger.info("Converting %s to WAV via ffmpeg", path.name)
+            logger.info("Converting %s to WAV via ffmpeg (reactive)", path.name)
             wav_path = self._convert_to_wav(path)
             if wav_path:
                 result = self._transcribe_with_retry(str(wav_path), max_retries)
-                # Clean up temp wav
                 try:
                     wav_path.unlink()
                 except Exception:
@@ -120,12 +132,15 @@ class ASRService:
                 if any(kw in err_str for kw in ["auth", "unauthorized", "quota", "401", "403"]):
                     break
                 if attempt < max_retries - 1:
-                    wait = (attempt + 1) * 5
+                    wait = attempt + 1
                     logger.warning("ASR attempt %d failed, retrying in %ds: %s", attempt + 1, wait, e)
                     time.sleep(wait)
 
         err_msg = str(last_error) if last_error else "Unknown error"
-        needs_conv = any(kw in err_msg.lower() for kw in ["format", "unsupported", "decode", "invalid"])
+        needs_conv = any(kw in err_msg.lower() for kw in [
+                "format", "unsupported", "decode", "invalid",
+                "文件格式", "不支持",
+            ])
         return {"success": False, "text": "", "error": f"ASR failed after {max_retries} retries: {err_msg}",
                 "needs_conversion": needs_conv}
 

@@ -94,6 +94,66 @@ class AudioRecorder {
     }
 }
 
+// ========== Image Handler ==========
+class ImageHandler {
+    constructor(previewContainerId, maxImages = 5) {
+        this.previewEl = document.getElementById(previewContainerId);
+        this.maxImages = maxImages;
+        this.files = [];
+        this._setupListeners();
+    }
+
+    _setupListeners() {
+        const container = this.previewEl.parentElement;
+        const cameraInput = container.querySelector('input[capture]');
+        const fileInput = container.querySelector('input:not([capture])');
+
+        cameraInput.addEventListener('change', (e) => this._handleFiles(e.target.files));
+        fileInput.addEventListener('change', (e) => this._handleFiles(e.target.files));
+    }
+
+    _handleFiles(fileList) {
+        for (const file of fileList) {
+            if (this.files.length >= this.maxImages) {
+                alert(`最多只能添加 ${this.maxImages} 张图片`);
+                break;
+            }
+            if (!file.type.startsWith('image/')) continue;
+            this.files.push(file);
+            this._addPreview(file);
+        }
+    }
+
+    _addPreview(file) {
+        const reader = new FileReader();
+        const wrapper = document.createElement('div');
+        wrapper.className = 'preview-item';
+
+        reader.onload = (e) => {
+            wrapper.innerHTML = `
+                <img src="${e.target.result}" alt="预览">
+                <button class="preview-remove">&times;</button>
+            `;
+            wrapper.querySelector('.preview-remove').addEventListener('click', () => {
+                const idx = this.files.indexOf(file);
+                if (idx > -1) this.files.splice(idx, 1);
+                wrapper.remove();
+            });
+        };
+        reader.readAsDataURL(file);
+        this.previewEl.appendChild(wrapper);
+    }
+
+    clear() {
+        this.files = [];
+        this.previewEl.innerHTML = '';
+    }
+
+    get hasImages() {
+        return this.files.length > 0;
+    }
+}
+
 // ========== API Client ==========
 class HelpApi {
     static _log(api, data) {
@@ -119,9 +179,12 @@ class HelpApi {
         return data;
     }
 
-    static async transcribeAndRoute(blob, ext) {
+    static async transcribeAndRoute(blob, ext, imageFiles = []) {
         const fd = new FormData();
         fd.append('audio', blob, `recording.${ext}`);
+        for (const file of imageFiles) {
+            fd.append('images', file);
+        }
         const res = await fetch('/api/transcribe-and-route', { method: 'POST', body: fd });
         const data = await res.json();
         this._log('transcribe-and-route', data);
@@ -161,14 +224,67 @@ class HelpApi {
     }
 }
 
-// ========== Quick Task (Workflow A) ==========
+// ========== Helpers ==========
+function esc(str) {
+    return String(str || '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ========== Quick Task — Chat UI ==========
 (function initQuickTask() {
-    const btn = document.getElementById('quick-record-btn');
-    const timer = document.getElementById('quick-timer');
-    const hint = document.getElementById('quick-hint');
-    const resultArea = document.getElementById('quick-result');
+    const btn      = document.getElementById('quick-record-btn');
+    const timerSpan = document.getElementById('quick-timer');
+    const chatEl   = document.getElementById('chat-messages');
+    const imageHandler = new ImageHandler('quick-preview');
 
     let recorder = null;
+
+    function getPreviewSrcs() {
+        return [...document.querySelectorAll('#quick-preview .preview-item img')]
+            .map(img => img.src);
+    }
+
+    function appendMsg(role, innerHtml) {
+        const id = 'msg-' + Date.now() + '-' + (Math.random() * 1e4 | 0);
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-msg ' + role;
+        wrap.id = id;
+        wrap.innerHTML = role === 'ai'
+            ? `<div class="msg-avatar">VT</div><div class="msg-bubble">${innerHtml}</div>`
+            : `<div class="msg-bubble">${innerHtml}</div>`;
+        const welcome = chatEl.querySelector('.chat-welcome');
+        if (welcome) welcome.remove();
+        chatEl.appendChild(wrap);
+        chatEl.scrollTop = chatEl.scrollHeight;
+        return id;
+    }
+
+    function updateMsg(id, innerHtml) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.querySelector('.msg-bubble').innerHTML = innerHtml;
+            chatEl.scrollTop = chatEl.scrollHeight;
+        }
+    }
+
+    function buildUserBubble(text, imgSrcs) {
+        const imgs = imgSrcs.length
+            ? `<div class="msg-images">${imgSrcs.map(s => `<img class="msg-img" src="${s}">`).join('')}</div>`
+            : '';
+        return imgs + esc(text);
+    }
+
+    function buildRoutingBubble(data) {
+        const r = data.routing || {};
+        const p = r.priority || 'medium';
+        const pText = {high:'高', medium:'中', low:'低'}[p] || p;
+        if (!r.assignee && !r.department) return '已收到您的任务，正在处理中。';
+        return `<div class="route-intro">好的，任务已分配：</div>
+            <div class="route-row"><span class="lbl">任务</span><span class="val">${esc(r.task_description || '-')}</span></div>
+            <div class="route-row"><span class="lbl">分配给</span><span class="val">${esc(r.assignee || '-')} · ${esc(r.department || '-')}</span></div>
+            <div class="route-row"><span class="lbl">优先级</span><span class="val"><span class="priority-badge ${p}">${pText}</span></span></div>
+            ${r.reason ? `<div class="route-row"><span class="lbl">理由</span><span class="val">${esc(r.reason)}</span></div>` : ''}`;
+    }
 
     btn.addEventListener('click', async () => {
         if (recorder && recorder.isRecording()) {
@@ -177,65 +293,47 @@ class HelpApi {
         }
 
         recorder = new AudioRecorder({
-            onTick: t => { timer.textContent = t; },
+            onTick: t => { timerSpan.textContent = t; },
             onError: msg => {
-                hint.textContent = msg;
                 btn.classList.remove('recording');
-                timer.classList.remove('recording');
+                timerSpan.textContent = '点击录音';
+                appendMsg('ai', `<span style="color:#e74c3c">${esc(msg)}</span>`);
             },
             onStop: async (blob, ext) => {
                 btn.classList.remove('recording');
-                timer.classList.remove('recording');
-                hint.textContent = '处理中...';
-                resultArea.style.display = 'block';
-                resultArea.innerHTML = '<div class="loading"><span class="spinner"></span>正在转录并路由...</div>';
+                timerSpan.textContent = '点击录音';
+
+                const imgSrcs = getPreviewSrcs();
+                const imgFiles = [...imageHandler.files];
+                imageHandler.clear();
+
+                // Show user bubble with images + placeholder, then AI loading
+                const userId = appendMsg('user', buildUserBubble('转录中…', imgSrcs));
+                const loadId = appendMsg('ai', '<div class="loading-dots"><span></span><span></span><span></span></div>');
 
                 try {
-                    const data = await HelpApi.transcribeAndRoute(blob, ext);
-                    renderQuickResult(data, resultArea);
+                    const data = await HelpApi.transcribeAndRoute(blob, ext, imgFiles);
+                    if (data.success) {
+                        updateMsg(userId, buildUserBubble(data.transcription?.text || '(无内容)', imgSrcs));
+                        updateMsg(loadId, buildRoutingBubble(data));
+                    } else {
+                        updateMsg(userId, buildUserBubble('处理失败', imgSrcs));
+                        updateMsg(loadId, `<span style="color:#e74c3c">${esc(data.error || '处理失败')}</span>`);
+                    }
                 } catch (err) {
-                    resultArea.innerHTML = `<div class="error-msg">网络错误: ${err.message}</div>`;
+                    updateMsg(userId, buildUserBubble('网络错误', imgSrcs));
+                    updateMsg(loadId, `<span style="color:#e74c3c">网络错误: ${esc(err.message)}</span>`);
                 }
-                hint.textContent = '点击按钮开始录音';
             },
         });
 
         const ok = await recorder.start();
         if (ok) {
             btn.classList.add('recording');
-            timer.classList.add('recording');
-            timer.textContent = '00:00';
-            hint.textContent = '再次点击停止录音';
-            resultArea.style.display = 'none';
+            timerSpan.textContent = '00:00';
         }
     });
 })();
-
-function renderQuickResult(data, container) {
-    if (!data.success) {
-        container.innerHTML = `<div class="error-msg">${data.error || '处理失败'}</div>`;
-        return;
-    }
-
-    const t = data.transcription || {};
-    const r = data.routing || {};
-
-    let html = '<h3>转录结果</h3>';
-    html += `<div class="transcription-text">${t.text || '(无内容)'}</div>`;
-
-    if (r.assignee || r.department) {
-        const pClass = r.priority || 'medium';
-        html += `<div class="routing-card priority-${pClass}">`;
-        html += `<div class="row"><span class="label">任务：</span><span class="value">${r.task_description || ''}</span></div>`;
-        html += `<div class="row"><span class="label">分配给：</span><span class="value">${r.assignee || '-'}</span></div>`;
-        html += `<div class="row"><span class="label">部门：</span><span class="value">${r.department || '-'}</span></div>`;
-        html += `<div class="row"><span class="label">优先级：</span><span class="priority-badge ${pClass}">${{high:'高',medium:'中',low:'低'}[pClass] || pClass}</span></div>`;
-        if (r.reason) html += `<div class="row"><span class="label">理由：</span><span class="value">${r.reason}</span></div>`;
-        html += '</div>';
-    }
-
-    container.innerHTML = html;
-}
 
 // ========== Long Transcription (Workflow B) ==========
 (function initLongTranscription() {
@@ -328,3 +426,4 @@ function renderQuickResult(data, container) {
         pollTimer = setInterval(poll, 3000);
     }
 })();
+

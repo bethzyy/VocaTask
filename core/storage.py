@@ -55,8 +55,42 @@ class Database:
                 assignee TEXT,
                 reason TEXT,
                 method TEXT,
+                image_context TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )''')
+            conn.execute('''CREATE TABLE IF NOT EXISTS task_attachments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                routing_id INTEGER,
+                image_path TEXT NOT NULL,
+                original_filename TEXT,
+                description TEXT,
+                size_bytes INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (routing_id) REFERENCES routing_history(id)
+            )''')
+            conn.execute('''CREATE TABLE IF NOT EXISTS task_notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                routing_id INTEGER NOT NULL,
+                note_text TEXT NOT NULL,
+                note_by TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (routing_id) REFERENCES routing_history(id)
+            )''')
+            # Migrations for existing databases
+            for col, typedef in [
+                ("image_context", "TEXT"),
+                ("status", "TEXT DEFAULT 'open'"),
+                ("accepted_by", "TEXT"),
+                ("accepted_at", "TIMESTAMP"),
+                ("resolution_notes", "TEXT"),
+                ("completed_at", "TIMESTAMP"),
+            ]:
+                try:
+                    conn.execute(f"ALTER TABLE routing_history ADD COLUMN {col} {typedef}")
+                except sqlite3.OperationalError:
+                    pass
+            # Enable WAL mode for concurrent multi-process access
+            conn.execute("PRAGMA journal_mode=WAL")
 
     # --- Transcription Jobs ---
 
@@ -98,15 +132,17 @@ class Database:
 
     # --- Routing History ---
 
-    def save_routing(self, audio_path: str, text: str, routing: dict):
+    def save_routing(self, audio_path: str, text: str, routing: dict, image_context: str = None) -> int:
         with self._conn() as conn:
-            conn.execute(
+            cursor = conn.execute(
                 """INSERT INTO routing_history
-                   (audio_path, transcribed_text, task_description, priority, department, assignee, reason, method)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (audio_path, transcribed_text, task_description, priority, department, assignee, reason, method, image_context)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (audio_path, text, routing.get("task_description"), routing.get("priority"),
-                 routing.get("department"), routing.get("assignee"), routing.get("reason"), routing.get("method")),
+                 routing.get("department"), routing.get("assignee"), routing.get("reason"),
+                 routing.get("method"), image_context),
             )
+            return cursor.lastrowid
 
     def list_routing_history(self, limit: int = 50) -> list[dict]:
         with self._conn() as conn:
@@ -114,6 +150,17 @@ class Database:
                 "SELECT * FROM routing_history ORDER BY created_at DESC LIMIT ?", (limit,)
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def save_attachments(self, routing_id: int, images: list[dict]):
+        with self._conn() as conn:
+            for img in images:
+                conn.execute(
+                    """INSERT INTO task_attachments
+                       (routing_id, image_path, original_filename, description, size_bytes)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (routing_id, img["file_path"], img.get("original_filename"),
+                     img.get("description"), img.get("size_bytes")),
+                )
 
 
 class AudioStorage:
@@ -161,5 +208,54 @@ class AudioStorage:
         max_bytes = config.MAX_AUDIO_SIZE_MB * 1024 * 1024
         if size > max_bytes:
             return False, f"File too large: {size / 1024 / 1024:.1f}MB (max {config.MAX_AUDIO_SIZE_MB}MB)"
+
+        return True, ""
+
+
+class ImageStorage:
+    """Manages image file saving and retrieval."""
+
+    def save(self, file_obj, original_filename: str) -> dict:
+        ext = Path(original_filename).suffix.lower()
+        if ext not in config.SUPPORTED_IMAGE_EXT:
+            ext = ".jpg"
+
+        file_id = uuid.uuid4().hex[:12]
+        filename = f"{file_id}{ext}"
+        filepath = config.IMAGE_DIR / filename
+
+        file_obj.save(str(filepath))
+        size = filepath.stat().st_size
+
+        logger.info("Saved image: %s (%d bytes)", filename, size)
+        return {
+            "file_id": file_id,
+            "file_path": str(filepath),
+            "filename": filename,
+            "size_bytes": size,
+        }
+
+    def get_path(self, file_id: str) -> Path | None:
+        for f in config.IMAGE_DIR.iterdir():
+            if f.stem.startswith(file_id):
+                return f
+        return None
+
+    @staticmethod
+    def validate(file_obj) -> tuple[bool, str]:
+        if not file_obj or not file_obj.filename:
+            return False, "No file provided"
+
+        ext = Path(file_obj.filename).suffix.lower()
+        if ext not in config.SUPPORTED_IMAGE_EXT:
+            return False, f"Unsupported format: {ext}. Supported: {', '.join(config.SUPPORTED_IMAGE_EXT)}"
+
+        file_obj.seek(0, 2)
+        size = file_obj.tell()
+        file_obj.seek(0)
+
+        max_bytes = config.MAX_IMAGE_SIZE_MB * 1024 * 1024
+        if size > max_bytes:
+            return False, f"File too large: {size / 1024 / 1024:.1f}MB (max {config.MAX_IMAGE_SIZE_MB}MB)"
 
         return True, ""

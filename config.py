@@ -11,15 +11,12 @@ STATIC_DIR = WEB_DIR / "static"
 
 # === Server ===
 PORT = 8010
+CRM_PORT = 8011
 HOST = "0.0.0.0"
 MAX_AUDIO_SIZE_MB = 50
 
 # === ZhipuAI ===
 ZHIPU_API_KEY = os.environ.get("ZHIPU_API_KEY", "").strip()
-if not ZHIPU_API_KEY:
-    key_file = Path(r"C:\D\CAIE_tool\LLM_Configs\GLM\apikeyValue2.txt")
-    if key_file.exists():
-        ZHIPU_API_KEY = key_file.read_text(encoding="utf-8").strip()
 
 # === AI Models ===
 ASR_MODEL = "GLM-ASR-2512"
@@ -30,14 +27,22 @@ API_TIMEOUT = 30
 SUPPORTED_AUDIO_EXT = {".wav", ".webm", ".mp3", ".ogg", ".m4a", ".flac"}
 SEGMENT_DURATION = 25  # seconds for long-form chunking
 
+# === Image Processing ===
+IMAGE_DIR = DATA_DIR / "images"
+MAX_IMAGE_SIZE_MB = 10
+SUPPORTED_IMAGE_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+VISION_MODEL = "glm-4v-flash"
+MAX_IMAGES_PER_TASK = 5
+
+# === Claude API ===
+CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "")
+
 # === FFmpeg ===
-FFMPEG_PATH = Path(
-    r"C:\D\CAIE_tool\MyAIProduct\gethtml\ffmpeg_temp"
-    r"\ffmpeg-8.0.1-essentials_build\bin\ffmpeg.exe"
-)
+FFMPEG_PATH = Path(os.environ.get("FFMPEG_PATH", "ffmpeg"))
 
 
 def ensure_dirs():
     """Create runtime directories if they don't exist."""
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+    IMAGE_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)

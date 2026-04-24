@@ -33,14 +33,22 @@ ROUTE_TASK_TOOL = {
     },
 }
 
-SYSTEM_PROMPT = """你是一个任务路由助手。根据用户的语音输入，理解任务意图，并分配给最合适的部门和人员。
+SYSTEM_PROMPT = """你是一个任务路由助手。根据用户的语音输入和可选的图片信息，理解任务意图，并分配给最合适的部门和人员。
 
 规则：
-1. 优先分配给被明确提到的人员
-2. 如果没有提到具体人员，根据任务内容匹配最合适的部门负责人
-3. 安全相关的任务优先级为 high
-4. 日常任务为 medium，不紧急的为 low
-5. 用中文回复"""
+1. 【最高优先级】检测输入中是否出现了人名或称呼，包括以下所有模式：
+   - 句首称呼："小张，去处理一下"
+   - 句尾指派："把它买下来，小张" / "去处理，让老王"
+   - 句中提及："让小张去买" / "叫李四来修"
+   只要提到了某人名字，无论位置，必须将任务分配给该人。
+2. 别名匹配：组织架构中每个人都有别名列表，"小X"通常指姓X的员工，请对照匹配。
+3. 如果提到了某人但组织架构中找不到匹配：
+   - assignee 填写组织架构中职责最相近的人
+   - reason 必须注明："输入中提到了[原称呼]，但组织架构中无此人，已改派给[assignee]负责"
+4. 如果没有提到任何人名，再根据任务内容匹配最合适的部门负责人。
+5. 安全相关的任务优先级为 high；日常任务为 medium；不紧急的为 low。
+6. 用中文回复。
+7. 如果有图片信息（标注为[附加图片信息]），请结合图片描述来理解任务。"""
 
 
 class TaskRouter:
@@ -52,17 +60,21 @@ class TaskRouter:
             raise ValueError("ZHIPU_API_KEY not configured")
         self.client = ZhipuAI(api_key=self.api_key)
 
-    def route(self, text: str) -> dict:
-        """Route a task. Returns {success, routing: {task_description, priority, department, assignee, reason}}."""
+    def route(self, text: str, image_context: str | None = None) -> dict:
+        """Route a task. Accepts optional image_context from vision service."""
         if not text or not text.strip():
             return {"success": False, "routing": {}, "error": "Empty text, nothing to route"}
+
+        user_content = text
+        if image_context:
+            user_content = f"{text}\n\n[附加图片信息]\n{image_context}"
 
         try:
             response = self.client.chat.completions.create(
                 model=config.ROUTING_MODEL,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT + "\n\n" + get_org_summary()},
-                    {"role": "user", "content": text},
+                    {"role": "user", "content": user_content},
                 ],
                 tools=[ROUTE_TASK_TOOL],
                 tool_choice={"type": "function", "function": {"name": "route_task"}},
