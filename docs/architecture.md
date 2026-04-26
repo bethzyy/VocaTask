@@ -3,7 +3,7 @@
 **版本**: v1.0  
 **日期**: 2026-04-25  
 **受众**: 开发者、接手维护者  
-**关联文档**: [prd.md](../product/prd.md)（产品需求）、[timeline.md](../planning/timeline.md)（路线图）
+**关联文档**: [prd.md](prd.md)（产品需求）、[timeline.md](timeline.md)（路线图）
 
 ---
 

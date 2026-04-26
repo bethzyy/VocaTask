@@ -134,7 +134,7 @@ AI 转录 + 路由（5-10秒）
 ```
 
 > 手机和电脑都是**客户端**，服务器必须有固定地址（见第 9 节部署方案）。  
-> 完整技术架构详见 [architecture.md](../technical/architecture.md)。
+> 完整技术架构详见 [architecture.md](architecture.md)。
 
 ### 6.2 技术栈
 

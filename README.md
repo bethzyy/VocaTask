@@ -31,11 +31,11 @@ python crm_server.py      # → http://localhost:8011
 
 | 文档 | 说明 |
 |------|------|
-| [docs/product/prd.md](docs/product/prd.md) | 产品需求、功能清单、验收标准 |
-| [docs/technical/architecture.md](docs/technical/architecture.md) | 系统架构、数据流、API Key 安全、DB 表结构 |
-| [docs/planning/timeline.md](docs/planning/timeline.md) | 项目路线图与里程碑 |
-| [docs/product/faq.md](docs/product/faq.md) | 客户确认问题清单 |
-| [docs/product/requirements.md](docs/product/requirements.md) | 原始需求简报 |
+| [docs/prd.md](docs/prd.md) | 产品需求、功能清单、验收标准 |
+| [docs/architecture.md](docs/architecture.md) | 系统架构、数据流、API Key 安全、DB 表结构 |
+| [docs/timeline.md](docs/timeline.md) | 项目路线图与里程碑 |
+| [docs/faq.md](docs/faq.md) | 客户确认问题清单 |
+| [docs/requirements.md](docs/requirements.md) | 原始需求简报 |
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更记录 |
 
 ---
@@ -69,4 +69,4 @@ VocaTask/
 - 无用户登录与权限管理
 - SQLite 不适合高并发生产环境
 
-详见 [docs/product/prd.md — 第 7 节](docs/product/prd.md)
+详见 [docs/prd.md — 第 7 节](docs/prd.md)
