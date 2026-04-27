@@ -37,6 +37,11 @@ MAX_IMAGES_PER_TASK = 5
 # === Claude API ===
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "")
 
+# === AI Task Analysis (Anthropic-compatible) ===
+AI_ROUTER_BASE_URL = "https://open.bigmodel.cn/api/anthropic"
+AI_ROUTER_API_KEY = os.environ.get("ZHIPU_API_KEY", "").strip()
+AI_ROUTER_MODEL = "glm-4-flash"
+
 # === FFmpeg ===
 FFMPEG_PATH = Path(os.environ.get("FFMPEG_PATH", "ffmpeg"))
 

@@ -26,6 +26,10 @@ class AudioRecorder {
     }
 
     async start() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            this.onError('录音需要 HTTPS 环境。请在手机浏览器中通过 HTTPS 访问，或使用 localhost。');
+            return false;
+        }
         try {
             this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         } catch (err) {
@@ -105,10 +109,7 @@ class ImageHandler {
 
     _setupListeners() {
         const container = this.previewEl.parentElement;
-        const cameraInput = container.querySelector('input[capture]');
-        const fileInput = container.querySelector('input:not([capture])');
-
-        cameraInput.addEventListener('change', (e) => this._handleFiles(e.target.files));
+        const fileInput = container.querySelector('input[type="file"]');
         fileInput.addEventListener('change', (e) => this._handleFiles(e.target.files));
     }
 
@@ -278,9 +279,10 @@ function esc(str) {
         const r = data.routing || {};
         const p = r.priority || 'medium';
         const pText = {high:'高', medium:'中', low:'低'}[p] || p;
+        const desc = r.task_description || data.transcription?.text?.slice(0, 50) || '-';
         if (!r.assignee && !r.department) return '已收到您的任务，正在处理中。';
         return `<div class="route-intro">好的，任务已分配：</div>
-            <div class="route-row"><span class="lbl">任务</span><span class="val">${esc(r.task_description || '-')}</span></div>
+            <div class="route-row"><span class="lbl">任务</span><span class="val">${esc(desc)}</span></div>
             <div class="route-row"><span class="lbl">分配给</span><span class="val">${esc(r.assignee || '-')} · ${esc(r.department || '-')}</span></div>
             <div class="route-row"><span class="lbl">优先级</span><span class="val"><span class="priority-badge ${p}">${pText}</span></span></div>
             ${r.reason ? `<div class="route-row"><span class="lbl">理由</span><span class="val">${esc(r.reason)}</span></div>` : ''}`;

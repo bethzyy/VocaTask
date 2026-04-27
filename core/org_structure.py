@@ -66,5 +66,19 @@ def keyword_route(text: str) -> dict:
     """Simple keyword-based routing fallback."""
     for keywords, dept, person in KEYWORD_RULES:
         if any(kw in text for kw in keywords):
-            return {"department": dept, "assignee": person, "priority": "medium", "method": "keyword_fallback"}
-    return {"department": "综合管理", "assignee": "值班人员", "priority": "low", "method": "keyword_fallback"}
+            return {
+                "task_description": text[:50],
+                "priority": "medium",
+                "department": dept,
+                "assignee": person,
+                "reason": f"关键词匹配分配至{dept}",
+                "method": "keyword_fallback",
+            }
+    return {
+        "task_description": text[:50],
+        "priority": "low",
+        "department": "综合管理",
+        "assignee": "值班人员",
+        "reason": "未匹配到关键词，分配至综合管理",
+        "method": "keyword_fallback",
+    }

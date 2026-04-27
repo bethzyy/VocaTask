@@ -1,4 +1,4 @@
-"""Claude-powered task analysis — re-routes tasks using claude-sonnet-4-6."""
+"""AI-powered task analysis via Anthropic-compatible endpoint."""
 import json
 import logging
 import re
@@ -16,7 +16,10 @@ _client: anthropic.Anthropic | None = None
 def _get_client() -> anthropic.Anthropic:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
+        _client = anthropic.Anthropic(
+            api_key=config.AI_ROUTER_API_KEY,
+            base_url=config.AI_ROUTER_BASE_URL,
+        )
     return _client
 
 
@@ -52,9 +55,9 @@ _SYSTEM = """你是一个工厂任务分派专家。根据用户的语音描述�
 
 
 def analyze(transcribed_text: str, image_context: str | None = None) -> dict | None:
-    """Call Claude to analyze a task. Returns parsed dict or None on failure."""
-    if not config.CLAUDE_API_KEY:
-        logger.warning("Claude API key not configured, skipping analysis")
+    """Call AI to analyze a task. Returns parsed dict or None on failure."""
+    if not config.AI_ROUTER_API_KEY:
+        logger.warning("AI router API key not configured, skipping analysis")
         return None
 
     org = get_org_summary()
@@ -64,7 +67,7 @@ def analyze(transcribed_text: str, image_context: str | None = None) -> dict | N
 
     try:
         resp = _get_client().messages.create(
-            model="claude-sonnet-4-6",
+            model=config.AI_ROUTER_MODEL,
             max_tokens=512,
             system=_SYSTEM,
             messages=[{"role": "user", "content": user_content}],
@@ -73,16 +76,16 @@ def analyze(transcribed_text: str, image_context: str | None = None) -> dict | N
         # Extract JSON even if wrapped in markdown code block
         m = re.search(r'\{.*\}', raw, re.DOTALL)
         if not m:
-            logger.warning("Claude returned no JSON: %s", raw[:200])
+            logger.warning("AI returned no JSON: %s", raw[:200])
             return None
         result = json.loads(m.group())
         # Validate required fields
         if not result.get("assignee") or not result.get("department"):
             return None
-        logger.info("Claude analysis: %s → %s / %s / %s",
+        logger.info("AI analysis: %s → %s / %s / %s",
                     transcribed_text[:40], result.get("assignee"),
                     result.get("department"), result.get("priority"))
         return result
     except Exception as e:
-        logger.error("Claude analysis failed: %s", e)
+        logger.error("AI analysis failed: %s", e)
         return None

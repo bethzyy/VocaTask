@@ -51,7 +51,7 @@ VocaTask/
 │   ├── asr.py          # 语音转文字
 │   ├── vision.py       # 图片描述
 │   ├── router.py       # GLM 任务路由
-│   ├── claude_router.py# Claude 二次分析
+│   ├── ai_router.py    # AI 路由（多模型）
 │   └── org_structure.py# 组织架构数据
 ├── web/                # 前端页面
 │   ├── index.html      # 发任务前端

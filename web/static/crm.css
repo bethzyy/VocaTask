@@ -223,12 +223,21 @@ body {
 .detail-row .val { color: var(--text-primary); font-weight: 500; }
 
 /* Attachments */
-.attachments-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.attachments-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.attachment-item { display: flex; gap: 14px; align-items: flex-start; }
 .attachment-thumb {
-  width: 80px; height: 80px; border-radius: var(--r-btn); object-fit: cover;
+  width: 96px; height: 96px; border-radius: var(--r-btn); object-fit: cover; flex-shrink: 0;
   border: 2px solid var(--border); cursor: pointer; transition: border-color 0.2s;
 }
 .attachment-thumb:hover { border-color: var(--brand); }
+.attachment-desc {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.7;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.attachment-label {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
 
 /* Status Control */
 .status-control { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }

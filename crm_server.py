@@ -8,7 +8,7 @@ from flask_cors import CORS
 import config
 from core.crm_storage import CRMDatabase
 from core.storage import ImageStorage
-from core import claude_router
+from core import ai_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,28 +29,39 @@ db = CRMDatabase()
 image_storage = ImageStorage()
 
 
-# ── Claude Background Worker ────────────────────────────────────────────────
+# ── AI Background Worker ────────────────────────────────────────────────
 
-def _claude_worker():
-    """Poll for unanalyzed tasks every 8 s and enrich them via Claude."""
+def _ai_worker():
+    """Poll for unanalyzed tasks every 8 s.
+
+    Only enriches tasks that lack assignee/department (i.e. main router failed).
+    Never overwrites fields already set by the main routing pipeline.
+    """
     while True:
         try:
             tasks = db.list_unanalyzed_tasks()
             for task in tasks:
-                result = claude_router.analyze(
+                # Skip if already routed by main pipeline
+                if task.get("assignee") and task.get("department"):
+                    db.mark_claude_analyzed(task["id"], {})
+                    logger.info("Task %d already routed, marking as analyzed", task["id"])
+                    continue
+
+                # Main router failed — use AI to fill in missing fields
+                result = ai_router.analyze(
                     task.get("transcribed_text", ""),
                     task.get("image_context"),
                 )
                 db.mark_claude_analyzed(task["id"], result or {})
                 if result:
-                    logger.info("Claude enriched task %d → %s / %s",
+                    logger.info("AI enriched unrouted task %d → %s / %s",
                                 task["id"], result.get("assignee"), result.get("priority"))
         except Exception as e:
-            logger.error("Claude worker error: %s", e)
+            logger.error("AI worker error: %s", e)
         time.sleep(8)
 
 
-threading.Thread(target=_claude_worker, daemon=True, name="ClaudeWorker").start()
+threading.Thread(target=_ai_worker, daemon=True, name="AIWorker").start()
 
 
 # ── Pages ──────────────────────────────────────────────────────────────────

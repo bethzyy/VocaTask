@@ -249,8 +249,8 @@ def serve_image(file_id):
 
 if __name__ == "__main__":
     queue_worker.start()
-    logger.info("Help app starting on http://localhost:%d", config.PORT)
+    logger.info("Help app starting on https://localhost:%d", config.PORT)
     try:
-        app.run(host=config.HOST, port=config.PORT, debug=True, threaded=True)
+        app.run(host=config.HOST, port=config.PORT, debug=True, threaded=True, ssl_context="adhoc")
     finally:
         queue_worker.stop()

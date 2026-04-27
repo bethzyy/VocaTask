@@ -281,17 +281,17 @@ function renderTaskDetail(t) {
     // Attachments
     let attachHtml = '';
     if (t.attachments?.length) {
-        const imgs = t.attachments.map(a => {
+        const imgs = t.attachments.map((a, i) => {
             const fileId = a.image_path.replace(/\\/g, '/').split('/').pop().replace(/\.[^.]+$/, '');
             const desc = esc(a.description || '');
-            return `<div style="display:inline-block">
-                <img class="attachment-thumb" src="/api/images/${fileId}" alt="附件" title="${desc}">
-                ${desc ? `<div style="font-size:11px;color:#888;max-width:80px;text-align:center;word-break:break-all">${desc}</div>` : ''}
+            return `<div class="attachment-item">
+                <img class="attachment-thumb" src="/api/images/${fileId}" alt="图片${i+1}">
+                ${desc ? `<div class="attachment-desc"><span class="attachment-label">图片 ${i+1} 描述</span>${desc}</div>` : ''}
             </div>`;
         }).join('');
         attachHtml = `<div class="detail-section">
             <div class="detail-section-title">附件图片</div>
-            <div class="attachments-grid">${imgs}</div>
+            <div class="attachments-list">${imgs}</div>
         </div>`;
     }
 
@@ -401,9 +401,19 @@ function showView(v) {
 document.addEventListener('DOMContentLoaded', () => {
     // Restore user
     const sel = document.getElementById('user-select');
-    if (state.currentUser) sel.value = state.currentUser;
+    // Restore: find option whose name part matches stored user
+    if (state.currentUser) {
+        for (const opt of sel.options) {
+            const name = opt.value.split(' · ')[1] || opt.value.split(' · ')[0];
+            if (name === state.currentUser) {
+                sel.value = opt.value;
+                break;
+            }
+        }
+    }
     sel.addEventListener('change', () => {
-        state.currentUser = sel.value;
+        const parts = sel.value.split(' · ');
+        state.currentUser = parts[1] || parts[0];
         localStorage.setItem('crm_user', sel.value);
         loadTasks();
     });

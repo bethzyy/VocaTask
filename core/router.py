@@ -84,13 +84,15 @@ class TaskRouter:
 
             msg = response.choices[0].message
             if not msg.tool_calls:
-                return {"success": False, "routing": {}, "error": "LLM did not return a routing decision"}
+                logger.warning("GLM did not return tool_calls, falling back to keyword routing")
+                fallback = keyword_route(text)
+                return {"success": True, "routing": fallback, "error": "LLM skipped function calling, used keyword fallback"}
 
             args_str = msg.tool_calls[0].function.arguments
             routing = json.loads(args_str) if isinstance(args_str, str) else args_str
             routing["method"] = "glm_function_calling"
 
-            return {"success": True, "routing": routing, "error": None}
+            return {"success": True, "routing": self._ensure_fields(routing, text), "error": None}
 
         except json.JSONDecodeError as e:
             logger.error("Failed to parse routing JSON: %s", e)
@@ -105,3 +107,13 @@ class TaskRouter:
                 "routing": fallback,
                 "error": f"API error ({type(e).__name__}), used keyword fallback",
             }
+
+    @staticmethod
+    def _ensure_fields(routing: dict, text: str) -> dict:
+        """Fill missing fields so the frontend never shows dashes."""
+        routing.setdefault("task_description", text[:50])
+        routing.setdefault("priority", "medium")
+        routing.setdefault("department", "综合管理")
+        routing.setdefault("assignee", "值班人员")
+        routing.setdefault("reason", "AI自动分配")
+        return routing
